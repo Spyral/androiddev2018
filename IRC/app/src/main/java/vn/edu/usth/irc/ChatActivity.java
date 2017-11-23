@@ -4,17 +4,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import java.io.IOException;
+import java.net.Socket;
 
 
 public class ChatActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
@@ -149,5 +155,36 @@ public class ChatActivity extends AppCompatActivity implements NavigationView.On
     public void ServerSelection(View view){
         Intent i = new Intent(this, ServerActivity.class);
         startActivity(i);
+    }
+
+    public void connect(View view){
+        AsyncTask<String, Integer, Socket> task = new AsyncTask<String, Integer, Socket>() {
+
+            @Override
+            protected void onPreExecute() {
+                Log.i("Chat activity", "start Asynctask");
+                Toast.makeText(ChatActivity.this, "Start socket connection", Toast.LENGTH_SHORT).show();
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Socket doInBackground(String... strings) {
+                Socket socket = null;
+                try {
+                    socket = new Socket(strings[0], 6667);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return socket;
+            }
+
+            @Override
+            protected void onPostExecute(Socket socket) {
+                Toast.makeText(ChatActivity.this, "Done", Toast.LENGTH_SHORT).show();
+                Log.i("Socket", "InetAddress: " + socket);
+                super.onPostExecute(socket);
+            }
+        };
+        task.execute("irc.freenode.net");
     }
 }
