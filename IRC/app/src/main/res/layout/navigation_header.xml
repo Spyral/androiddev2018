@@ -4,27 +4,56 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/colorPrimaryDark"
-    android:paddingBottom="10dp">
+    android:background="@color/colorPrimaryDark">
 
-    <TextView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="5dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_place_white_24dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="@string/server"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/nav_header_text_size" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/server_name"
-        android:textColor="@color/colorWhite"
-        android:textSize="@dimen/nav_header_text_size"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"
-        android:typeface="monospace"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="10dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/user_name"
-        android:textColor="@color/colorWhite"
-        android:textSize="@dimen/nav_header_text_size"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"
-        android:typeface="monospace"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_person_white_24dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="@string/user_name"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/nav_header_text_size" />
+
+    </LinearLayout>
 
 </LinearLayout>

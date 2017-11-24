@@ -5,7 +5,9 @@
     android:background="@color/chatbox_background"
     android:padding="10dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:scrollbarSize="@dimen/scrollbar_size"
+    android:scrollbarThumbVertical="@color/colorAccent">
 
     <LinearLayout
         android:layout_width="match_parent"

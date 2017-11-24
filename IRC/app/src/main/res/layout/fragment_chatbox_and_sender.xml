@@ -1,0 +1,25 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
+    tools:context="vn.edu.usth.irc.ChatboxAndSenderFragment">
+
+    <fragment
+        android:id="@+id/chatbox"
+        android:name="vn.edu.usth.irc.ChatboxFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        tools:layout="@layout/fragment_chatbox" />
+
+    <fragment
+        android:id="@+id/sender"
+        android:name="vn.edu.usth.irc.SenderFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/chatbox"
+        tools:layout="@layout/fragment_sender" />
+
+</RelativeLayout>

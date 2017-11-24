@@ -1,38 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/sender"
-    android:background="@color/sender_background"
-    android:padding="10dp"
+    android:background="@color/colorPrimary"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:layout_height="wrap_content"
+    android:gravity="bottom"
+    android:orientation="horizontal"
+    android:paddingBottom="5dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
     <ScrollView
-        android:background="@color/sender_background"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_margin="0dp"
-        android:padding="0dp">
+        android:layout_weight="6"
+        android:paddingStart="10dp"
+        android:paddingEnd="5dp">
 
         <EditText
-            android:id="@+id/senderbox"
-            android:textAlignment="viewStart"
-            android:textColor="@color/sender_mess_color"
-            android:textSize="@dimen/chat_text_size"
+            android:id="@+id/sender_box"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="0dp"
-            android:layout_marginBottom="10dp"/>
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorWhite"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/chat_text_size"
+            android:maxLines="3"/>
 
     </ScrollView>
 
-    <Button
+    <ImageView
         android:id="@+id/send_button"
-        android:background="@mipmap/ic_send_white_36dp"
-        android:layout_marginLeft="15dp"
-        android:layout_width="31dp"
-        android:layout_height="33dp"
-        android:onClick="connect"/>
+        android:src="@mipmap/ic_send_white_36dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"/>
 
 </LinearLayout>
 

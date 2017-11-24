@@ -4,49 +4,49 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
-
-import java.io.IOException;
-import java.net.Socket;
 
 
-public class ChatActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mToggle;
     private NavigationView navView;
-
-    public String[] channels = {"# general"};
+    private int pageLimit = 3;
 
     public SharedPreferences preferences;
     public boolean ranBefore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
         preferences = getSharedPreferences("first_time", Context.MODE_PRIVATE);
         ranBefore = preferences.getBoolean("RanBefore", false);
         if (ranBefore == false)
         {
-            Intent i = new Intent(this, LoginActivity.class);
+            Intent i = new Intent(this, StartActivity.class);
             startActivity(i);
             finish();
         }
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
 
+        // Drawer Layout and NavigationView code
         mDrawerLayout = (DrawerLayout) findViewById(R.id.container);
         mToggle       = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.open, R.string.close);
 
@@ -60,6 +60,16 @@ public class ChatActivity extends AppCompatActivity implements NavigationView.On
         {
             setupDrawerContent(navView);
         }
+
+        // ViewPager and TabLayout code
+        PagerAdapter pagerAdapter = new HomeFragmentPagerAdapter(getSupportFragmentManager());
+        ViewPager pager = (ViewPager) findViewById(R.id.pager);
+        pager.setOffscreenPageLimit(pageLimit);
+        pager.setAdapter(pagerAdapter);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab);
+        tabLayout.setTabMode(TabLayout.MODE_FIXED);
+        tabLayout.setupWithViewPager(pager);
     }
 
     @Override
@@ -77,9 +87,11 @@ public class ChatActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public boolean onNavigationItemSelected(MenuItem item) {
-        item.setCheckable(true);
-        item.setChecked(true);
-        mDrawerLayout.closeDrawers();
+        if (item.getItemId() != R.id.create_channel) {
+            item.setCheckable(true);
+            item.setChecked(true);
+            mDrawerLayout.closeDrawers();
+        }
         return true;
     }
 
@@ -90,34 +102,12 @@ public class ChatActivity extends AppCompatActivity implements NavigationView.On
         newChannel.setChecked(true);
     }
 
-    public void createAndShowLogOutDialog(View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        LayoutInflater inflater = this.getLayoutInflater();
-        builder.setView(inflater.inflate(R.layout.dialog_logout, null));
-
-        builder.setPositiveButton(R.string.logout, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                GoBackToLogIn();
-                dialog.dismiss();
-            }
-        });
-
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                dialog.dismiss();
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
     public void createAndShowNewChannelDialog(MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
         builder.setTitle("Enter a name:");
 
         final EditText editText = new EditText(this);
+        editText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
         builder.setView(editText);
 
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -137,54 +127,46 @@ public class ChatActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-    public void GoBackToLogIn(){
-        Intent i = new Intent(this, LoginActivity.class);
+
+    /*public void GoBackToLogIn(){
+        Intent i = new Intent(this, StartActivity.class);
         startActivity(i);
         finish();
         SharedPreferences preferences = getSharedPreferences("first_time", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("RanBefore", false);
         editor.apply();
-    }
+    }*/
 
-    public void OpenSettings(View view){
-        Intent i = new Intent(this, SettingsActivity.class);
-        startActivity(i);
-    }
+    public class HomeFragmentPagerAdapter extends FragmentPagerAdapter {
+        private final int PAGE_COUNT = 3;
+        private String titles[] = new String[] { "Messages", "People", "Servers" };
 
-    public void ServerSelection(View view){
-        Intent i = new Intent(this, ServerActivity.class);
-        startActivity(i);
-    }
+        public HomeFragmentPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
 
-    public void connect(View view){
-        AsyncTask<String, Integer, Socket> task = new AsyncTask<String, Integer, Socket>() {
+        @Override
+        public int getCount() {
+            return PAGE_COUNT; // number of pages for a ViewPager
+        }
 
-            @Override
-            protected void onPreExecute() {
-                Log.i("Chat activity", "start Asynctask");
-                Toast.makeText(ChatActivity.this, "Start socket connection", Toast.LENGTH_SHORT).show();
-                super.onPreExecute();
+        @Override
+        public Fragment getItem(int page) {
+            // returns an instance of Fragment corresponding to the specified page
+            switch (page) {
+                case 0: return new ChatboxAndSenderFragment();
+                case 1: return new Fragment();
+                case 2: return new ServerFragment();
             }
+            return new Fragment();
+        }
 
-            @Override
-            protected Socket doInBackground(String... strings) {
-                Socket socket = null;
-                try {
-                    socket = new Socket(strings[0], 6667);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return socket;
-            }
-
-            @Override
-            protected void onPostExecute(Socket socket) {
-                Toast.makeText(ChatActivity.this, "Done", Toast.LENGTH_SHORT).show();
-                Log.i("Socket", "InetAddress: " + socket);
-                super.onPostExecute(socket);
-            }
-        };
-        task.execute("irc.freenode.net");
+        @Override
+        public CharSequence getPageTitle(int page) {
+            // returns a tab title corresponding to the specified page
+            return titles[page];
+        }
     }
+
 }

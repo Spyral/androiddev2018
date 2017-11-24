@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".AppCompatPreferenceActivity">
+    android:background="@color/colorPrimaryDark"
+    tools:context="vn.edu.usth.irc.ServerFragment">
 
     <ListView
         android:id="@+id/server_list"

@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">IRC</string>
     <!-- Strings related to login -->
-    <string name="prompt_email">Email</string>
+    <string name="prompt_uname">Username</string>
     <string name="prompt_password">Password (optional)</string>
-    <string name="action_sign_in">Sign in</string>
+    <string name="action_connect">Connect</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
@@ -40,6 +40,8 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
 
-    <string name="server_name">Server: USTH ICT</string>
-    <string name="user_name">Username: LongTa</string>
+    <string name="server">Server</string>
+    <string name="user_name">Username</string>
+
+    <string name="choose_server">Choose a server:</string>
 </resources>
