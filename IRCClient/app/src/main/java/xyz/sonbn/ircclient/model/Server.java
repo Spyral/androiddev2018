@@ -9,6 +9,7 @@ public class Server extends RealmObject {
     private String title, host, nickname;
     private User user;
     private RealmList<String> channels;
+    private boolean isConnected;
 
     public int getId() {
         return id;
@@ -65,4 +66,13 @@ public class Server extends RealmObject {
     public void setChannels(RealmList<String> channels) {
         this.channels = channels;
     }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
+    }
+
 }

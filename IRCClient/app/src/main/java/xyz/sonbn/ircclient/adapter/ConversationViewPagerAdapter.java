@@ -7,13 +7,19 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import xyz.sonbn.ircclient.fragment.ConversationFragment;
+import xyz.sonbn.ircclient.model.Conversation;
 import xyz.sonbn.ircclient.util.ConversationPlaceHolder;
 
 public class ConversationViewPagerAdapter extends PagerAdapter {
     private Context mContext;
+    private Conversation mConversation;
 
     public ConversationViewPagerAdapter(Context context){
         mContext = context;
+    }
+
+    public Conversation getConversation(){
+        return mConversation;
     }
 
     @Override

@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.text.method.TextKeyListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +16,15 @@ import android.widget.ImageButton;
 import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.activity.ClientActivity;
 import xyz.sonbn.ircclient.adapter.ConversationViewPagerAdapter;
+import xyz.sonbn.ircclient.model.Conversation;
+import xyz.sonbn.ircclient.model.Message;
+import xyz.sonbn.ircclient.model.Server;
 
 
 public class ServerFragment extends Fragment {
     public static final String TRANSACTION_TAG = "fragment_server";
 
+    private Server mServer;
     private ClientActivity activity;
     private Context mContext;
     private EditText input;
@@ -65,9 +70,33 @@ public class ServerFragment extends Fragment {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (input.getText().length() > 0){
+
+                }
             }
         });
 
         return view;
+    }
+
+    private void sendCurrentMessage() {
+        sendMessage(input.getText().toString());
+
+        // Workaround for a race condition in EditText
+        // Instead of calling input.setText("");
+        // See:
+        // - https://github.com/pocmo/Yaaic/issues/67
+        // - http://code.google.com/p/android/issues/detail?id=17508
+        TextKeyListener.clear(input.getText());
+    }
+
+    private void sendMessage(String text) {
+        if (text.equals("")) {
+            // ignore empty messages
+            return;
+        }
+
+        if (!mServer.isConnected()) {
+        }
     }
 }

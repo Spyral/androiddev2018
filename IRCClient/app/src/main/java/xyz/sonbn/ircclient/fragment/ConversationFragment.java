@@ -9,9 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import xyz.sonbn.ircclient.R;
+import xyz.sonbn.ircclient.listener.ChannelListener;
+import xyz.sonbn.ircclient.model.Conversation;
+import xyz.sonbn.ircclient.model.Server;
 
-public class ConversationFragment extends Fragment {
-
+public class ConversationFragment extends Fragment implements ChannelListener {
+    private Server mServer;
 
     public ConversationFragment() {
         // Required empty public constructor
@@ -27,5 +30,24 @@ public class ConversationFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_conversation, container, false);
+    }
+
+    @Override
+    public void onConversationMessage(String target) {
+    }
+
+    @Override
+    public void onNewConversation(String target) {
+
+    }
+
+    @Override
+    public void onRemoveConversation(String target) {
+
+    }
+
+    @Override
+    public void onTopicChanged(String target) {
+
     }
 }
