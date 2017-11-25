@@ -12,10 +12,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import io.realm.Realm;
 import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.fragment.ServerFragment;
 import xyz.sonbn.ircclient.fragment.OverviewFragment;
 import xyz.sonbn.ircclient.model.Server;
+import xyz.sonbn.ircclient.util.AppManager;
 
 public class MainActivity extends AppCompatActivity implements ClientActivity {
     private static final String TAG = "MainActivity";
@@ -30,12 +32,16 @@ public class MainActivity extends AppCompatActivity implements ClientActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        AppManager.getInstance().loadServer(this);
+
         initializeToolbar();
         initializeDrawer();
 
         if (savedInstanceState == null) {
             onOverview(null);
         }
+
+        Realm.init(this);
     }
 
     @Override

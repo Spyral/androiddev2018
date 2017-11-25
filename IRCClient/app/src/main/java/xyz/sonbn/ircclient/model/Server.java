@@ -2,6 +2,7 @@ package xyz.sonbn.ircclient.model;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.Required;
 
 
 public class Server extends RealmObject {
