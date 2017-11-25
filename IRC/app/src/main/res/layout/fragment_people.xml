@@ -7,7 +7,7 @@
     android:background="@color/colorPrimaryDark">
 
     <ListView
-        android:id="@+id/list_server"
+        android:id="@+id/list_people"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:choiceMode="singleChoice"

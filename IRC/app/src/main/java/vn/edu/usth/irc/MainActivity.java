@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // returns an instance of Fragment corresponding to the specified page
             switch (page) {
                 case 0: return new ChatboxAndSenderFragment();
-                case 1: return new Fragment();
+                case 1: return new PeopleFragment();
                 case 2: return new ServerFragment();
             }
             return new Fragment();
