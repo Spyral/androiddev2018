@@ -14,13 +14,15 @@ import android.widget.LinearLayout;
 
 import io.realm.Realm;
 import xyz.sonbn.ircclient.R;
-import xyz.sonbn.ircclient.fragment.ServerFragment;
+import xyz.sonbn.ircclient.fragment.ActiveUserFragment;
+import xyz.sonbn.ircclient.fragment.ChannelFragment;
 import xyz.sonbn.ircclient.fragment.OverviewFragment;
+import xyz.sonbn.ircclient.fragment.dummy.DummyContent;
 import xyz.sonbn.ircclient.model.Extra;
 import xyz.sonbn.ircclient.model.Server;
 import xyz.sonbn.ircclient.util.AppManager;
 
-public class MainActivity extends AppCompatActivity implements ClientActivity {
+public class MainActivity extends AppCompatActivity implements ClientActivity, ActiveUserFragment.OnListFragmentInteractionListener {
     private static final String TAG = "MainActivity";
     private ActionBarDrawerToggle toggle;
     private Toolbar toolbar;
@@ -78,9 +80,9 @@ public class MainActivity extends AppCompatActivity implements ClientActivity {
         Bundle arguments = new Bundle();
 
         arguments.putInt(Extra.SERVER_ID, server.getId());
-        ServerFragment serverFragment = new ServerFragment();
-        serverFragment.setArguments(arguments);
-        switchToFragment(serverFragment, ServerFragment.TRANSACTION_TAG + "-" + server.getId());
+        ChannelFragment channelFragment = new ChannelFragment();
+        channelFragment.setArguments(arguments);
+        switchToFragment(channelFragment, ChannelFragment.TRANSACTION_TAG + "-" + server.getId());
     }
 
     public void initializeToolbar() {
@@ -127,5 +129,10 @@ public class MainActivity extends AppCompatActivity implements ClientActivity {
                 .beginTransaction()
                 .replace(R.id.container, fragment, tag)
                 .commit();
+    }
+
+    @Override
+    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+
     }
 }

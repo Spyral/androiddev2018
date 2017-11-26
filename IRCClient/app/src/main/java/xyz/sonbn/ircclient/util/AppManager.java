@@ -5,10 +5,12 @@ import android.database.Cursor;
 import android.util.SparseArray;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import xyz.sonbn.ircclient.model.Conversation;
 import xyz.sonbn.ircclient.model.Server;
 
 /**
@@ -21,9 +23,11 @@ public class AppManager {
     private SparseArray<Server> mServers;
     private boolean isServerLoaded = false;
     private Realm mRealm;
+    private ArrayList<Conversation> mConversations;
 
     private AppManager(){
         mServers = new SparseArray<Server>();
+        mConversations = new ArrayList<>();
         mRealm = Realm.getDefaultInstance();
     }
 
@@ -80,5 +84,25 @@ public class AppManager {
         ArrayList<String> channels = new ArrayList<String>();
 
         return channels;
+    }
+
+    public Conversation addConversation(int serverId, String channel){
+        Conversation conversation = new Conversation(serverId, channel);
+        mConversations.add(conversation);
+        return conversation;
+    }
+
+    public Conversation getConversation(int serverId, String channel){
+        Conversation result = null;
+        for (Conversation conversation: mConversations){
+            if (conversation.getServerId() == serverId && conversation.getChannel() == channel){
+                result = conversation;
+                return result;
+            }
+        }
+        if (result == null){
+            return addConversation(serverId, channel);
+        }
+        return result;
     }
 }

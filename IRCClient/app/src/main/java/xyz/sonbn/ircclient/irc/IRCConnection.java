@@ -20,4 +20,8 @@ public class IRCConnection extends IRCProtocol {
         mIRCService = service;
         mServer = AppManager.getInstance().getServerById(serverId);
     }
+
+    public final void sendMessage(String target, String message) {
+        //("PRIVMSG " + target + " :" + message);
+    }
 }

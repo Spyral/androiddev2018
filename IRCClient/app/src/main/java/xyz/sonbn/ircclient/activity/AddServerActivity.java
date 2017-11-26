@@ -132,6 +132,15 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
                 mServer.setNickname(((EditText) findViewById(R.id.nickname)).getText().toString());
                 mServer.setRealname(((EditText) findViewById(R.id.real_name)).getText().toString());
 
+                if (channels.size() == 0){
+                    channels.add("#General");
+                }
+                RealmList<String> defaultChannel = new RealmList<>();
+                for (String channel: channels){
+                    defaultChannel.add(channel);
+                }
+                mServer.setChannels(defaultChannel);
+
                 mRealm.insertOrUpdate(mServer);
             }
         });

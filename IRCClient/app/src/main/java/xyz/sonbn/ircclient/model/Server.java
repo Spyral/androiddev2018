@@ -2,6 +2,7 @@ package xyz.sonbn.ircclient.model;
 
 import java.util.ArrayList;
 
+import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -29,11 +30,14 @@ public class Server extends RealmObject {
     @Required
     private String realname;
 
+    private int status;
+
     // To do: Authenication
 
 
     public Server() {
         port = 6667;
+        status = Status.DISCONNECTED;
     }
 
     public int getId() {
@@ -98,5 +102,13 @@ public class Server extends RealmObject {
 
     public void setRealname(String realname) {
         this.realname = realname;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }
