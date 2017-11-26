@@ -19,6 +19,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 
 
@@ -35,9 +36,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
         preferences = getSharedPreferences("first_time", Context.MODE_PRIVATE);
         ranBefore = preferences.getBoolean("RanBefore", false);
         if (ranBefore == false)
@@ -46,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(i);
             finish();
         }
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         // Drawer Layout and NavigationView code
         mDrawerLayout = (DrawerLayout) findViewById(R.id.container);
@@ -113,12 +114,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setTitle("Enter a name:");
 
         final EditText editText = new EditText(this);
+        editText.setText("#");
         editText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
         builder.setView(editText);
 
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                String newChannelName = "# " + editText.getText().toString();
+                String newChannelName = editText.getText().toString();
                 addNewChannelInNavDrawer(newChannelName);
                 dialog.dismiss();
             }
@@ -133,16 +135,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
-    /*public void GoBackToLogIn(){
-        Intent i = new Intent(this, StartActivity.class);
-        startActivity(i);
-        finish();
-        SharedPreferences preferences = getSharedPreferences("first_time", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("RanBefore", false);
-        editor.apply();
-    }*/
 
     public class HomeFragmentPagerAdapter extends FragmentPagerAdapter {
         private final int PAGE_COUNT = 3;
@@ -173,5 +165,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // returns a tab title corresponding to the specified page
             return titles[page];
         }
+    }
+    
+    public void newServer(View view){
+        Intent i = new Intent(this, StartActivity.class);
+        startActivity(i);
+        finish();
     }
 }

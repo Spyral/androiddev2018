@@ -36,6 +36,58 @@
             android:inputType="textAutoCorrect"
             android:maxLines="1"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/real_name"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/real_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorWhite"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/chat_text_size"
+            android:maxLines="1"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/host_name"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/host_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorWhite"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/chat_text_size"
+            android:maxLines="1"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/port"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/port"
+            android:text="@string/default_port"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorWhite"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/chat_text_size"
+            android:maxLines="1"/>
+
         <Button
             android:id="@+id/connect_button"
             style="?android:textAppearanceSmall"

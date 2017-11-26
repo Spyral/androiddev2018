@@ -42,6 +42,10 @@
 
     <string name="server">Server</string>
     <string name="user_name">Username</string>
+    <string name="host_name">Hostname</string>
+    <string name="port">Port</string>
+    <string name="default_port">6667</string>
+    <string name="real_name">Real Name</string>
 
     <string name="choose_server">Choose a server:</string>
 </resources>
