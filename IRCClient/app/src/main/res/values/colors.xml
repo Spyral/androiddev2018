@@ -8,6 +8,7 @@
     <color name="colorAlert">#E6FF0000</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorChatText">#9CFF00</color>
+    <color name="colorBlue">#8b9dc3</color>
     <!--color of chatbox-->
     <color name="chatbox_background">#1C263C</color>
     <color name="user_color">#0f9200</color>
