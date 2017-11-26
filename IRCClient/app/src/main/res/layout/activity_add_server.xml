@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="xyz.sonbn.ircclient.activity.AddServerActivity"
+    android:orientation="vertical">
+    <include layout="@layout/item_toolbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="?android:attr/listSeparatorTextViewStyle"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="3dip"
+                android:text="@string/server" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/server_title" />
+
+            <EditText
+                android:id="@+id/title"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/server_title"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/server_host" />
+
+            <EditText
+                android:id="@+id/host"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/server_host"
+                android:inputType="textNoSuggestions"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/server_port" />
+
+            <EditText
+                android:id="@+id/port"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/server_port"
+                android:maxLength="5"
+                android:minEms="6"
+                android:numeric="integer"
+                android:singleLine="true"
+                android:text="6667" />
+
+            <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/real_name" />
+
+            <EditText
+                android:id="@+id/real_name"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/nickname"
+                android:singleLine="true" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/nickname" />
+
+            <EditText
+                android:id="@+id/nickname"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/nickname"
+                android:singleLine="true" />
+
+            <Button
+                android:id="@+id/authentication"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/authentication" />
+
+            <Button
+                android:id="@+id/channels"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/channels" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
