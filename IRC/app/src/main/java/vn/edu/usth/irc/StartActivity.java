@@ -19,11 +19,32 @@ public class StartActivity extends AppCompatActivity {
     public void connect (View view){
         Intent i = new Intent(this, MainActivity.class);
         startActivity(i);
+//        Function to check connection to the server
+//        *
+//        *
+//        *
+//        *
+//        *
+//        *
+//        *
+//        put here
         finish();
         SharedPreferences preferences = getSharedPreferences("first_time", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("RanBefore", true);
         editor.commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        SharedPreferences preferences = getSharedPreferences("first_time", Context.MODE_PRIVATE);
+        if (preferences.getBoolean("RanBefore", false) == true)
+        {
+            Intent i = new Intent(this, MainActivity.class);
+            startActivity(i);
+            finish();
+        }
+        super.onBackPressed();
     }
 }
 
