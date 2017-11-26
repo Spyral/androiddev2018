@@ -26,13 +26,12 @@
 
     </ScrollView>
 
-    <Button
+    <ImageView
         android:id="@+id/send_button"
-        android:background="@mipmap/ic_send_white_36dp"
+        android:src="@mipmap/ic_send_white_36dp"
         android:layout_marginLeft="15dp"
         android:layout_width="31dp"
-        android:layout_height="33dp"
-        android:onClick="connect"/>
+        android:layout_height="33dp" />
 
 </LinearLayout>
 
