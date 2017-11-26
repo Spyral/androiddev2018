@@ -16,6 +16,7 @@ import io.realm.Realm;
 import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.fragment.ServerFragment;
 import xyz.sonbn.ircclient.fragment.OverviewFragment;
+import xyz.sonbn.ircclient.model.Extra;
 import xyz.sonbn.ircclient.model.Server;
 import xyz.sonbn.ircclient.util.AppManager;
 
@@ -74,8 +75,12 @@ public class MainActivity extends AppCompatActivity implements ClientActivity {
 
     @Override
     public void onServerSelected(Server server) {
+        Bundle arguments = new Bundle();
+
+        arguments.putInt(Extra.SERVER_ID, server.getId());
         ServerFragment serverFragment = new ServerFragment();
-        switchToFragment(serverFragment, ServerFragment.TRANSACTION_TAG);
+        serverFragment.setArguments(arguments);
+        switchToFragment(serverFragment, ServerFragment.TRANSACTION_TAG + "-" + server.getId());
     }
 
     public void initializeToolbar() {

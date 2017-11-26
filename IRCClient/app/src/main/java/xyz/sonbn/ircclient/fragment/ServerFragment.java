@@ -17,14 +17,17 @@ import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.activity.ClientActivity;
 import xyz.sonbn.ircclient.adapter.ConversationViewPagerAdapter;
 import xyz.sonbn.ircclient.model.Conversation;
+import xyz.sonbn.ircclient.model.Extra;
 import xyz.sonbn.ircclient.model.Message;
 import xyz.sonbn.ircclient.model.Server;
+import xyz.sonbn.ircclient.util.AppManager;
 
 
 public class ServerFragment extends Fragment {
     public static final String TRANSACTION_TAG = "fragment_server";
 
     private Server mServer;
+    private int mServerId;
     private ClientActivity activity;
     private Context mContext;
     private EditText input;
@@ -33,13 +36,16 @@ public class ServerFragment extends Fragment {
     private ConversationViewPagerAdapter mConversationViewPagerAdapter;
     private TabLayout tabLayout;
 
+    public ServerFragment() {
+        setHasOptionsMenu(true);
+    }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
         if (!(context instanceof ClientActivity)) {
-            throw new IllegalArgumentException("Activity has to implement YaaicActivity interface");
+            throw new IllegalArgumentException("Activity has to implement ClientActivity interface");
         }
 
         this.activity = (ClientActivity) context;
@@ -49,6 +55,9 @@ public class ServerFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mServerId = getArguments().getInt(Extra.SERVER_ID);
+        mServer = AppManager.getInstance().getServerById(mServerId);
 
     }
 
