@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ranBefore = preferences.getBoolean("RanBefore", false);
         if (ranBefore == false)
         {
-            Intent i = new Intent(this, StartActivity.class);
+            Intent i = new Intent(this, ServerActivity.class);
             startActivity(i);
             finish();
         }
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     
     public void newServer(View view){
-        Intent i = new Intent(this, StartActivity.class);
+        Intent i = new Intent(this, ServerActivity.class);
         startActivity(i);
         finish();
     }
