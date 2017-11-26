@@ -129,6 +129,8 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
                 mServer.setTitle(((EditText) findViewById(R.id.title)).getText().toString());
                 mServer.setHost(((EditText) findViewById(R.id.host)).getText().toString());
                 mServer.setPort(Integer.parseInt(((EditText) findViewById(R.id.port)).getText().toString()));
+                mServer.setNickname(((EditText) findViewById(R.id.nickname)).getText().toString());
+                mServer.setRealname(((EditText) findViewById(R.id.real_name)).getText().toString());
 
                 mRealm.insertOrUpdate(mServer);
             }
@@ -146,6 +148,8 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
                 mServer.setTitle(((EditText) findViewById(R.id.title)).getText().toString());
                 mServer.setHost(((EditText) findViewById(R.id.host)).getText().toString());
                 mServer.setPort(Integer.parseInt(((EditText) findViewById(R.id.port)).getText().toString()));
+                mServer.setNickname(((EditText) findViewById(R.id.nickname)).getText().toString());
+                mServer.setRealname(((EditText) findViewById(R.id.real_name)).getText().toString());
 
                 mRealm.insertOrUpdate(mServer);
             }
