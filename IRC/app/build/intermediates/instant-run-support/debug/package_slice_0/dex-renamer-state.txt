@@ -1,0 +1,4 @@
+#Sun Nov 26 15:53:05 ICT 2017
+base.0=E\:\\Github Repos\\androiddev2018\\IRC\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\1
+path.0=classes.dex
+renamed.0=classes.dex
