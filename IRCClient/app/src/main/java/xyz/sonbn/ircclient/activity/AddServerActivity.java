@@ -121,16 +121,35 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
         mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                mServer = mRealm.createObject(Server.class);
+                Number currentMaxId = mRealm.where(Server.class).max("id");
+                int serverId = (currentMaxId == null) ? 1 : currentMaxId.intValue() + 1;
+
+                mServer = new Server();
+                mServer.setId(serverId);
                 mServer.setTitle(((EditText) findViewById(R.id.title)).getText().toString());
                 mServer.setHost(((EditText) findViewById(R.id.host)).getText().toString());
                 mServer.setPort(Integer.parseInt(((EditText) findViewById(R.id.port)).getText().toString()));
+
+                mRealm.insertOrUpdate(mServer);
             }
         });
     }
 
     private void updateServer(){
+        mRealm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                Number currentMaxId = mRealm.where(Server.class).max("id");
+                int serverId = (currentMaxId == null) ? 1 : currentMaxId.intValue() + 1;
 
+                mServer.setId(serverId);
+                mServer.setTitle(((EditText) findViewById(R.id.title)).getText().toString());
+                mServer.setHost(((EditText) findViewById(R.id.host)).getText().toString());
+                mServer.setPort(Integer.parseInt(((EditText) findViewById(R.id.port)).getText().toString()));
+
+                mRealm.insertOrUpdate(mServer);
+            }
+        });
     }
 
     private void validateServer(){

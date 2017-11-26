@@ -4,10 +4,12 @@ import java.util.ArrayList;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
 
 public class Server extends RealmObject {
+    @PrimaryKey
     private int id;
 
     @Required
@@ -28,6 +30,11 @@ public class Server extends RealmObject {
     private String realname;
 
     // To do: Authenication
+
+
+    public Server() {
+        port = 6667;
+    }
 
     public int getId() {
         return id;
