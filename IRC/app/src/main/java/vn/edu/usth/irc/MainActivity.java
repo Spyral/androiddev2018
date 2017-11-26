@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mToggle;
     private NavigationView navView;
+    public TabLayout tabLayout;
     private int pageLimit = 3;
 
     public SharedPreferences preferences;
@@ -63,13 +64,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // ViewPager and TabLayout code
         PagerAdapter pagerAdapter = new HomeFragmentPagerAdapter(getSupportFragmentManager());
-        ViewPager pager = (ViewPager) findViewById(R.id.pager);
-        pager.setOffscreenPageLimit(pageLimit);
-        pager.setAdapter(pagerAdapter);
+        ViewPager mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setOffscreenPageLimit(pageLimit);
+        mPager.setAdapter(pagerAdapter);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab);
+        tabLayout = (TabLayout) findViewById(R.id.tab);
         tabLayout.setTabMode(TabLayout.MODE_FIXED);
-        tabLayout.setupWithViewPager(pager);
+        tabLayout.setupWithViewPager(mPager);
+
     }
 
     @Override
@@ -88,9 +90,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public boolean onNavigationItemSelected(MenuItem item) {
         if (item.getItemId() != R.id.create_channel) {
-            item.setCheckable(true);
-            item.setChecked(true);
-            mDrawerLayout.closeDrawers();
+            selectCurrentChannel(item);
         }
         return true;
     }
@@ -98,8 +98,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void addNewChannelInNavDrawer(String newChannelName) {
         Menu menu = navView.getMenu();
         MenuItem newChannel = menu.add(R.id.menu_top, Menu.NONE, 0, newChannelName);
-        newChannel.setCheckable(true);
-        newChannel.setChecked(true);
+        selectCurrentChannel(newChannel);
+    }
+
+    private void selectCurrentChannel(MenuItem item) {
+        item.setCheckable(true);
+        item.setChecked(true);
+        mDrawerLayout.closeDrawers();
+        tabLayout.getTabAt(0).select();
     }
 
     public void createAndShowNewChannelDialog(MenuItem item) {
@@ -168,5 +174,4 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return titles[page];
         }
     }
-
 }
