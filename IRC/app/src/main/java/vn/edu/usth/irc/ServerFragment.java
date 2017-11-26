@@ -1,5 +1,6 @@
 package vn.edu.usth.irc;
 
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,7 +27,8 @@ public class ServerFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+                TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tab);
+                tabLayout.getTabAt(0).select();
             }
         });
 
