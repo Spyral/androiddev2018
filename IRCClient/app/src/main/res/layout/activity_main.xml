@@ -43,7 +43,7 @@
         app:headerLayout="@layout/navigation_header"
         android:layout_gravity="start">
 
-    </android.support.design.widget.NavigationView>
+    </android.support.design.widget.NavigationView>z
 
 
 </android.support.v4.widget.DrawerLayout>
