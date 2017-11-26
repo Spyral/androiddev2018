@@ -52,4 +52,9 @@ public class ChannelViewPagerAdapter extends FragmentPagerAdapter {
     public int getCount() {
         return PAGE_COUNT;
     }
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return title[position];
+    }
 }

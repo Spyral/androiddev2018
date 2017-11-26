@@ -42,12 +42,7 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
 
     private int mServerId;
     private Server mServer;
-    private ClientActivity activity;
-    private ViewPager mViewPager;
-    private ChannelViewPagerAdapter mChannelViewPagerAdapter;
-    private TabLayout tabLayout;
 
-    private IRCBinder mBinder;
     private ChannelReceiver mChannelReceiver;
     private ServerReceiver mServerListener;
 
@@ -62,8 +57,6 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
         if (!(context instanceof ClientActivity)) {
             throw new IllegalArgumentException("Activity has to implement ClientActivity interface");
         }
-
-        this.activity = (ClientActivity) context;
     }
 
     @Override
@@ -79,12 +72,12 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_channel, container, false);
 
-        mViewPager = (ViewPager) view.findViewById(R.id.pager);
+        ViewPager mViewPager = (ViewPager) view.findViewById(R.id.pager);
 
-        mChannelViewPagerAdapter = new ChannelViewPagerAdapter(getFragmentManager(), mServerId, mServer.getChannels().first());
+        ChannelViewPagerAdapter mChannelViewPagerAdapter = new ChannelViewPagerAdapter(getFragmentManager(), mServerId, mServer.getChannels().first());
         mViewPager.setAdapter(mChannelViewPagerAdapter);
 
-        tabLayout = (TabLayout) view.findViewById(R.id.tab);
+        TabLayout tabLayout = (TabLayout) view.findViewById(R.id.tab);
         tabLayout.setupWithViewPager(mViewPager);
 
         if (mServer.getStatus() == Status.PRE_CONNECTING){

@@ -3,9 +3,9 @@ package xyz.sonbn.ircclient.model;
 import java.util.Date;
 
 public class Message {
-    private String nickname;
+    private  String nickname;
 
-    private String content;
+    private  String content;
 
     private Date date;
 

@@ -1,5 +1,7 @@
 package xyz.sonbn.ircclient.model;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 import io.realm.RealmList;
@@ -15,7 +17,7 @@ public class Conversation {
 
     private String mChannel;
 
-    private ArrayList<Message> mMessages;
+    private final ArrayList<Message> mMessages;
 
     public Conversation() {
         mMessages = new ArrayList<>();
@@ -25,10 +27,17 @@ public class Conversation {
         mServerId = serverId;
         mChannel = channel;
         mMessages = new ArrayList<>();
+        mMessages.add(new Message("sonbn", "Hi"));
     }
 
     public void addMessage(Message message){
         mMessages.add(message);
+        Log.d("Conversation", mMessages.hashCode() + "");
+    }
+
+    public ArrayList<Message> getMessages(){
+        Log.d("Conversation-2", mMessages.hashCode() + "");
+        return mMessages;
     }
 
     public int getServerId() {
