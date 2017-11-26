@@ -39,7 +39,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp">
+        android:layout_marginBottom="10dp">
 
         <ImageView
             android:layout_width="wrap_content"
@@ -53,26 +53,6 @@
             android:text="@string/user_name"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/nav_header_text_size" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        android:orientation="horizontal"
-        android:layout_marginBottom="5dp">
-
-        <TextView
-            android:id="@+id/user_online"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="end|bottom"
-            android:textColor="@color/colorBlue"
-            android:paddingEnd="15dp"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:text="132 online"/>
 
     </LinearLayout>
 
