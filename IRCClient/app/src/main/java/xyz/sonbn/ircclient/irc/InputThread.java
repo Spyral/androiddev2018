@@ -82,7 +82,6 @@ public class InputThread extends Thread {
                     String line = null;
                     while ((line = _breader.readLine()) != null) {
                         try {
-                            _bot.handleLine(line);
                         }
                         catch (Throwable t) {
                             // Stick the whole stack trace into a String so we can output it nicely.

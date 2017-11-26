@@ -26,6 +26,7 @@
     <string name="server_port">Port</string>
     <string name="channels">Channels</string>
     <string name="nickname">Nickname</string>
+    <string name="real_name">Real name</string>
     <string name="authentication">Authentication</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
@@ -35,6 +36,9 @@
     <string name="auth_description">Authentication</string>
     <string name="auth_password">Password</string>
     <string name="auth_username">Username</string>
+
+    <string name="add_server_label">Add new server</string>
+    <string name="edit_server_label">Edit server</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

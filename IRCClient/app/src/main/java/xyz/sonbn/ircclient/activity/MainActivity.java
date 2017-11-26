@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity implements ClientActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Realm.init(this);
+
         AppManager.getInstance().loadServer(this);
 
         initializeToolbar();
@@ -40,8 +42,6 @@ public class MainActivity extends AppCompatActivity implements ClientActivity {
         if (savedInstanceState == null) {
             onOverview(null);
         }
-
-        Realm.init(this);
     }
 
     @Override

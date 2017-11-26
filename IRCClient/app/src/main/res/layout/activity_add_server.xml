@@ -66,6 +66,18 @@
                 android:text="6667" />
 
             <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/real_name" />
+
+            <EditText
+                android:id="@+id/real_name"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/nickname"
+                android:singleLine="true" />
+
+            <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/nickname" />

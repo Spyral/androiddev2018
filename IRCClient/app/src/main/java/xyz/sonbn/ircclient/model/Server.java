@@ -1,16 +1,33 @@
 package xyz.sonbn.ircclient.model;
 
+import java.util.ArrayList;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.Required;
 
 
 public class Server extends RealmObject {
-    private int id, port;
-    private String title, host, nickname;
-    private User user;
+    private int id;
+
+    @Required
+    private String title;
+
+    @Required
+    private String host;
+
+    private int port;
+
+    @Required
+    private String nickname;
+
+    @Required
     private RealmList<String> channels;
-    private boolean isConnected;
+
+    @Required
+    private String realname;
+
+    // To do: Authenication
 
     public int getId() {
         return id;
@@ -18,14 +35,6 @@ public class Server extends RealmObject {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
     }
 
     public String getTitle() {
@@ -44,6 +53,14 @@ public class Server extends RealmObject {
         this.host = host;
     }
 
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
     public String getNickname() {
         return nickname;
     }
@@ -52,28 +69,27 @@ public class Server extends RealmObject {
         this.nickname = nickname;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     public RealmList<String> getChannels() {
         return channels;
+    }
+
+    public ArrayList<String> getChannelsInArrayList(){
+        ArrayList<String> arrayListChannels = new ArrayList<>();
+        for (String channel: channels) {
+            arrayListChannels.add(channel);
+        }
+        return arrayListChannels;
     }
 
     public void setChannels(RealmList<String> channels) {
         this.channels = channels;
     }
 
-    public boolean isConnected() {
-        return isConnected;
+    public String getRealname() {
+        return realname;
     }
 
-    public void setConnected(boolean connected) {
-        isConnected = connected;
+    public void setRealname(String realname) {
+        this.realname = realname;
     }
-
 }

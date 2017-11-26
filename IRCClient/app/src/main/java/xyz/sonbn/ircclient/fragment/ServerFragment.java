@@ -95,8 +95,5 @@ public class ServerFragment extends Fragment {
             // ignore empty messages
             return;
         }
-
-        if (!mServer.isConnected()) {
-        }
     }
 }

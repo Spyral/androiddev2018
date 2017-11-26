@@ -1,6 +1,7 @@
 package xyz.sonbn.ircclient.util;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.util.SparseArray;
 
 import java.util.ArrayList;
@@ -72,5 +73,12 @@ public class AppManager {
             servers.add(mServers.valueAt(i));
         }
         return servers;
+    }
+
+    public ArrayList<String> getChannelsByServerId(int serverId)
+    {
+        ArrayList<String> channels = new ArrayList<String>();
+
+        return channels;
     }
 }
