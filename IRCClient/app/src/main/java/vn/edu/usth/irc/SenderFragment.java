@@ -1,6 +1,7 @@
 package vn.edu.usth.irc;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -17,15 +18,18 @@ import android.widget.ImageButton;
 
 public class SenderFragment extends Fragment {
 
-    private EditText sender;
+<<<<<<< HEAD
+
+=======
+    private EditText input;
+>>>>>>> 8abdd617b58c04d2b6f4073828c6ade20c098c86
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_sender, container, false);
-
-        sender = (EditText) view.findViewById(R.id.sender_box);
+        input = (EditText) view.findViewById(R.id.sender_box);
 
         ImageButton imageButton = (ImageButton) view.findViewById(R.id.send_button);
         imageButton.setOnClickListener(new View.OnClickListener() {
@@ -39,9 +43,9 @@ public class SenderFragment extends Fragment {
     }
 
     private void sendMessage() {
-        ConnectServerActivity.user.setMessage(sender.getText().toString());
+        ConnectServerActivity.user.setMessage(input.getText().toString());
         ChatboxFragment.updateChat(ConnectServerActivity.user.getUsername(), ConnectServerActivity.user.getMessage());
-        sender.setText("");
+        input.setText("");
     }
 
 }
