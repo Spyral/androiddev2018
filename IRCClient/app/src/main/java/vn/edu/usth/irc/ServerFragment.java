@@ -19,7 +19,7 @@ public class ServerFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_server, container, false);
 
-        ArrayAdapter arrayAdapter = new ArrayAdapter<>(getContext(), R.layout.label_server_item, serverNameArray);
+        ArrayAdapter arrayAdapter = new ArrayAdapter<>(getContext(), R.layout.server_list_row, serverNameArray);
 
         ListView listView = (ListView) view.findViewById(R.id.list_server);
         listView.setAdapter(arrayAdapter);
