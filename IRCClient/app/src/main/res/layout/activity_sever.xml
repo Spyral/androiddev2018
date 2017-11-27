@@ -13,7 +13,6 @@
     tools:context=".AppCompatPreferenceActivity">
 
     <LinearLayout
-        android:id="@+id/email_login_form"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -51,6 +50,7 @@
             android:backgroundTint="@color/colorWhite"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/chat_text_size"
+            android:inputType="textAutoCorrect"
             android:maxLines="1"/>
 
         <TextView
@@ -68,6 +68,7 @@
             android:backgroundTint="@color/colorWhite"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/chat_text_size"
+            android:inputType="textAutoCorrect"
             android:maxLines="1"/>
 
         <TextView
@@ -86,6 +87,7 @@
             android:backgroundTint="@color/colorWhite"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/chat_text_size"
+            android:inputType="number"
             android:maxLines="1"/>
 
         <Button
