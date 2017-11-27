@@ -1,9 +1,11 @@
 package xyz.sonbn.ircclient.irc;
 
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.ArrayList;
 
+import io.realm.Realm;
 import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.model.Broadcast;
 import xyz.sonbn.ircclient.model.Conversation;
@@ -21,10 +23,12 @@ public class IRCConnection extends IRCProtocol {
 
     private IRCService mIRCService;
     private final Server mServer;
+    private final int mServerId;
 
     public IRCConnection(IRCService service, int serverId){
         mIRCService = service;
-        mServer = AppManager.getInstance().getServerById(serverId);
+        mServerId = serverId;
+        mServer = Realm.getDefaultInstance().where(Server.class).equalTo("id", mServerId).findFirst();
     }
 
     public void setNickname(String nickname){
@@ -37,11 +41,11 @@ public class IRCConnection extends IRCProtocol {
 
     @Override
     public void onConnect(){
-        mIRCService.sendBroadcast(Broadcast.createServerIntent(Broadcast.SERVER_UPDATE, mServer.getId()));
+        mIRCService.sendBroadcast(Broadcast.createServerIntent(Broadcast.SERVER_UPDATE, mServerId));
 
         Intent intent = Broadcast.createConversationIntent(
                 Broadcast.CONVERSATION_MESSAGE,
-                mServer.getId(),
+                mServerId,
                 mServer.getChannels().first()
         );
         mIRCService.sendBroadcast(intent);
@@ -51,6 +55,13 @@ public class IRCConnection extends IRCProtocol {
     public void onRegister() {
         super.onRegister();
 
+        try {
+            Thread.sleep(1000);
+        } catch(InterruptedException e) {
+            // do nothing
+        }
+
+        Log.d("IRCConnection", "Join channel " + mServer.getChannels().first());
         joinChannel(mServer.getChannels().first());
 
         Message infoMessage = new Message("System",mIRCService.getString(R.string.message_login_done));
@@ -108,5 +119,12 @@ public class IRCConnection extends IRCProtocol {
         }
 
         return null;
+    }
+
+    @Override
+    protected void onServerResponse(int code, String response) {
+        if (code == 4){
+            onRegister();
+        }
     }
 }

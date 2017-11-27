@@ -68,6 +68,11 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         }
     }
 
+    public void addMessage(Message message){
+        mMessages.add(message);
+        notifyItemInserted(mMessages.size() - 1);
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
         public final TextView mMessageTv;

@@ -156,8 +156,9 @@ public class ConversationFragment extends Fragment implements ChannelListener, S
             return;
         }
 
-        mConversation.addMessage(new Message(nickname, text));
-        mConversationAdapter.swap(mConversation.getMessages());
+        Message message = new Message(nickname, text);
+        mConversation.addMessage(message);
+        mConversationAdapter.addMessage(message);
         mBinder.getService().getConnection(mServerId).sendMessage(mConversation.getChannel(), text);
     }
 

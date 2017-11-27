@@ -1,5 +1,7 @@
 package xyz.sonbn.ircclient.irc;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -40,6 +42,7 @@ public abstract class IRCProtocol {
     private long mMessageDelay = 1000;
     private String mName, mVersion;
     private InputThread mInputThread = null;
+    private OutputThread mOutputThread = null;
     private final Queue _outQueue = new Queue();
     private boolean _autoNickChange = false;
     private int _autoNickTries = 1;
@@ -287,6 +290,119 @@ public abstract class IRCProtocol {
         }
     }
 
+    //Overloading connect
+    public final synchronized void connect(String hostname) throws IOException{
+        connect(hostname, DEFAULT_PORT, null);
+    }
+
+    public final synchronized void connect(String hostname, int port) throws IOException{
+        connect(hostname, port, null);
+    }
+
+    public final synchronized void connect(String hostname, int port, String password) throws IOException{
+        mHostname = hostname;
+        mPort = port;
+        mPassword = password;
+
+        mSocket = new Socket(mHostname, mPort);
+
+        mInetAddress = mSocket.getLocalAddress();
+
+        InputStreamReader inputStreamReader = new InputStreamReader(mSocket.getInputStream());
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(mSocket.getOutputStream());
+
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+
+        String nick = getName();
+
+        OutputThread.sendRawLine(this, bufferedWriter, "NICK " + nick);
+        OutputThread.sendRawLine(this, bufferedWriter, "USER " + getLogin() + " 8 * :" + getVersion());
+        OutputThread.sendRawLine(this, bufferedWriter, "JOIN #straifur");
+
+        mInputThread = new InputThread(this, mSocket, bufferedReader, bufferedWriter);
+
+        setNick(nick);
+
+        String line = null;
+        line = bufferedReader.readLine();
+
+        if (line == null){
+            Log.d("IRCProtocol", "No response");
+        }
+
+        handleCommand(line);
+
+        mSocket.setSoTimeout(5*60*1000);
+
+        mInputThread.start();
+
+        if (mOutputThread == null){
+            mOutputThread = new OutputThread(this, _outQueue);
+            mOutputThread.start();
+        }
+
+        onConnect();
+    }
+
+    public final void joinChannel(String channel) {
+        this.sendRawLine("JOIN " + channel);
+    }
+
+    public final void joinChannel(String channel, String key) {
+        this.joinChannel(channel + " " + key);
+    }
+
+    public final synchronized void sendRawLine(String line){
+        mInputThread.sendRawLine(line);
+    }
+
+    public final synchronized void sendRawLineViaQueue(String line) {
+        if (line == null) {
+            throw new NullPointerException("Cannot send null messages to server");
+        }
+        _outQueue.add(line);
+    }
+
+    public final int getMaxLineLength() {
+        return InputThread.MAX_LINE_LENGTH;
+    }
+
+    protected final void setName(String name){
+        mName = name;
+    }
+
+    protected final void setVersion(String version){
+        mVersion = version;
+    }
+
+    private final void setNick(String nick) {
+        _nick = nick;
+    }
+
+    protected void onConnect() {}
+
+    protected void onRegister()
+    {
+        isRegisterd = true;
+    }
+
+    public final ArrayList<String> getUsers(String channel) {
+        channel = channel.toLowerCase();
+        ArrayList<String> userArray = new ArrayList<>();
+        synchronized (_channels) {
+            Hashtable<User, User> users = _channels.get(channel);
+            if (users != null) {
+                Enumeration<User> enumeration = users.elements();
+                for (int i = 0; i < users.size(); i++) {
+                    User user = enumeration.nextElement();
+                    userArray.add(user.getNick());
+                }
+            }
+        }
+        return userArray;
+    }
+
     private final void processServerResponse(int code, String response) {
 
         if (code == RPL_LIST) {
@@ -366,102 +482,8 @@ public abstract class IRCProtocol {
                 this.addUser(channel, new User(prefix, nick));
             }
         }
-        else if (code == RPL_ENDOFNAMES) {
-            // This is the end of a NAMES list, so we know that we've got
-            // the full list of users in the channel that we just joined.
-            String channel = response.substring(response.indexOf(' ') + 1, response.indexOf(" :"));
-            User[] users = this.getUsersArray(channel);
-            this.onUserList(channel, users);
-        }
 
         this.onServerResponse(code, response);
-    }
-
-    //Overloading connect
-    public final synchronized void connect(String hostname) throws IOException{
-        connect(hostname, DEFAULT_PORT, null);
-    }
-
-    public final synchronized void connect(String hostname, int port) throws IOException{
-        connect(hostname, port, null);
-    }
-
-    public final synchronized void connect(String hostname, int port, String password) throws IOException{
-        mHostname = hostname;
-        mPort = port;
-        mPassword = password;
-
-        mSocket = new Socket(mHostname, mPort);
-
-        mInetAddress = mSocket.getLocalAddress();
-
-        InputStreamReader inputStreamReader = new InputStreamReader(mSocket.getInputStream());
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(mSocket.getOutputStream());
-
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-
-        mInputThread = new InputThread(this, mSocket, bufferedReader, bufferedWriter);
-
-        onConnect();
-    }
-
-    public final void joinChannel(String channel) {
-        this.sendRawLine("JOIN " + channel);
-    }
-
-    public final void joinChannel(String channel, String key) {
-        this.joinChannel(channel + " " + key);
-    }
-
-    public final synchronized void sendRawLine(String line){
-        mInputThread.sendRawLine(line);
-    }
-
-    public final synchronized void sendRawLineViaQueue(String line) {
-        if (line == null) {
-            throw new NullPointerException("Cannot send null messages to server");
-        }
-        _outQueue.add(line);
-    }
-
-    public final int getMaxLineLength() {
-        return InputThread.MAX_LINE_LENGTH;
-    }
-
-    protected final void setName(String name){
-        mName = name;
-    }
-
-    protected final void setVersion(String version){
-        mVersion = version;
-    }
-
-    private final void setNick(String nick) {
-        _nick = nick;
-    }
-
-    protected void onConnect() {}
-
-    protected void onRegister()
-    {
-        isRegisterd = true;
-    }
-
-    public final ArrayList<String> getUsers(String channel) {
-        channel = channel.toLowerCase();
-        ArrayList<String> userArray = new ArrayList<>();
-        synchronized (_channels) {
-            Hashtable<User, User> users = _channels.get(channel);
-            if (users != null) {
-                Enumeration<User> enumeration = users.elements();
-                for (int i = 0; i < users.size(); i++) {
-                    User user = enumeration.nextElement();
-                    userArray.add(user.getNick());
-                }
-            }
-        }
-        return userArray;
     }
 
     protected void onServerResponse(int code, String response) {}
@@ -1266,6 +1288,10 @@ public abstract class IRCProtocol {
 
     public String getNick() {
         return _nick;
+    }
+
+    public final String getVersion() {
+        return _version;
     }
 
     private final void addUser(String channel, User user) {

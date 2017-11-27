@@ -14,6 +14,8 @@ found at http://www.jibble.org/licenses/
 
 package xyz.sonbn.ircclient.irc;
 
+import android.util.Log;
+
 import java.io.BufferedWriter;
 
 public class OutputThread extends Thread {
@@ -24,17 +26,16 @@ public class OutputThread extends Thread {
     }
 
     static void sendRawLine(IRCProtocol protocol, BufferedWriter bwriter, String line) {
-        if (line.length() > protocol.getMaxLineLength() - 2) {
-            line = line.substring(0, protocol.getMaxLineLength() - 2);
+//        if (line.length() > protocol.getMaxLineLength() - 2) {
+//            line = line.substring(0, protocol.getMaxLineLength() - 2);
+//        }
+        Log.d("COMMAND", line);
+        try {
+            bwriter.write(line + "\r\n");
+            bwriter.flush();
         }
-        synchronized(bwriter) {
-            try {
-                bwriter.write(line + "\r\n");
-                bwriter.flush();
-            }
-            catch (Exception e) {
-                // Silent response - just lose the line.
-            }
+        catch (Exception e) {
+            // Silent response - just lose the line.
         }
     }
     

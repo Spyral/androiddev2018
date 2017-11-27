@@ -17,8 +17,6 @@ import xyz.sonbn.ircclient.util.AppManager;
  */
 
 public class IRCService extends Service {
-    public static final String ACTION_FOREGROUND = "xyz.sonbn.ircclient.irc.foreground";
-
     private final IRCBinder mBinder;
     private HashMap<Integer, IRCConnection> mConnections;
 
@@ -40,18 +38,32 @@ public class IRCService extends Service {
         super.onCreate();
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null){
+
+        }
+        return Service.START_STICKY;
+    }
+
     public void connect(final Server server){
         final int serverId = server.getId();
+        final String nickname = server.getNickname();
+        final String realname = server.getRealname();
+        final String host = server.getHost();
+        final int port = server.getPort();
+
         final IRCService service = this;
+
 
         new Thread("Connect thread to" + server.getTitle()){
             @Override
             public void run() {
                 try {
                     IRCConnection connection = getConnection(serverId);
-                    connection.setNickname(server.getNickname());
-                    connection.setRealName(server.getRealname());
-                    connection.connect(server.getHost(), server.getPort());
+                    connection.setNickname(nickname);
+                    connection.setRealName(realname);
+                    connection.connect(host, port);
                 } catch (Exception e){
                     e.printStackTrace();
                 }
