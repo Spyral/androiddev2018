@@ -3,12 +3,12 @@
     <color name="colorPrimary">#313C53</color>
     <color name="colorPrimaryDark">#1c263c</color>
     <color name="colorPrimaryLight">#455268</color>
-    <color name="colorSecondHand">#B6C0D2</color>
-    <color name="colorAccent">#FFFFFF</color>
+    <color name="colorAccent">#9CFF00</color>
+
     <color name="colorAlert">#E6FF0000</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorChatText">#9CFF00</color>
-    <color name="colorBlue">#8b9dc3</color>
+    <color name="colorBlue">#3366CC</color>
     <!--color of chatbox-->
     <color name="chatbox_background">#1C263C</color>
     <color name="user_color">#0f9200</color>

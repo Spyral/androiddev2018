@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ranBefore = preferences.getBoolean("RanBefore", false);
         if (ranBefore == false)
         {
-            Intent i = new Intent(this, ServerActivity.class);
+            Intent i = new Intent(this, ConnectServerActivity.class);
             startActivity(i);
             finish();
         }
@@ -114,8 +114,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setTitle("Enter a name:");
 
         final EditText editText = new EditText(this);
-        editText.setText("#");
-        editText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
+        editText.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorWhite));
         builder.setView(editText);
 
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -168,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     
     public void newServer(View view){
-        Intent i = new Intent(this, ServerActivity.class);
+        Intent i = new Intent(this, ConnectServerActivity.class);
         startActivity(i);
         finish();
     }

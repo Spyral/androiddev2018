@@ -12,7 +12,7 @@ import android.widget.ListView;
 
 public class ServerFragment extends Fragment {
 
-    private String[] serverNameArray = {"Android","IPhone","WindowsMobile","Blackberry","WebOS","Ubuntu","Windows7","Max OS X"};
+    private String[] serverNameArray = {"Android","IPhone","WindowsMobile","Blackberry","WebOS","Ubuntu","Windows7","Max OS X","A","B","C","D","E","F","G"};
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

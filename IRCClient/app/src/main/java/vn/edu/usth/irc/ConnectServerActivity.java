@@ -8,12 +8,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-public class ServerActivity extends AppCompatActivity {
+public class ConnectServerActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sever);
+        setContentView(R.layout.activity_connect_sever);
     }
 
     public void connect (View view){

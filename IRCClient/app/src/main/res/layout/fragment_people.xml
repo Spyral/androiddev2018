@@ -11,7 +11,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:choiceMode="singleChoice"
-        android:listSelector="@color/colorPrimaryLight">
+        android:listSelector="@color/colorPrimary"
+        android:scrollbarSize="@dimen/scrollbar_size"
+        android:scrollbarThumbVertical="@color/colorAccent">
 
     </ListView>
 
