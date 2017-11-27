@@ -46,6 +46,21 @@
     <string name="port">Port</string>
     <string name="default_port">6667</string>
     <string name="real_name">Real Name</string>
-
+    <string name="message_connected">Connected to %1$s</string>
     <string name="choose_server">Choose a server:</string>
+    <string name="message_users_on_chan">Users on %1$s:</string>
+    <string name="command_desc_names">Lists all users in channel</string>
+    <string name="command_desc_nick">Change own nickname</string>
+    <string name="command_desc_join">Join a channel</string>
+    <string name="message_login_done">Server login done.</string>
+    <string name="message_deop">%1$s deops %2$s</string>
+    <string name="key_show_joinpartquit" translatable="false">show_joinpartquit</string>
+    <string name="default_show_joinpartquit" translatable="false">true</string>
+    <string name="key_reconnect_interval" translatable="false">reconnect_interval</string>
+    <string name="default_reconnect_interval" translatable="false">5</string>
+    <string name="nickname_in_use">Nickname %1$s already in use</string>
+    <string name="irc_login_error">Could not log into the IRC server %1$s:%2$d</string>
+    <string name="could_not_connect">Could not connect to %1$s:%2$d</string>
+    <string name="key_reconnect" translatable="false">reconnect</string>
+    <string name="default_reconnect" translatable="false">false</string>
 </resources>

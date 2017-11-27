@@ -1,0 +1,39 @@
+-- Merging decision tree log ---
+manifest
+ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+	package
+		ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:70-98
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+	android:versionName
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+	android:versionCode
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:1-7:12
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:1:11-69
+application
+ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml:3:5-5:19
+uses-sdk
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		ADDED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml
+		INJECTED from D:\MLP\USTH\B3-ICT\1st\Mobile-Application\Practical-Work\androiddev2018\IRCClient\pircbot\src\main\AndroidManifest.xml

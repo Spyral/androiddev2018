@@ -26,6 +26,8 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.preference.PreferenceManager;
 
+import vn.edu.usth.irc.R;
+
 /**
  * The settings class is a helper class to access the different preferences via
  * small and simple methods.
@@ -136,26 +138,26 @@ public class Settings
 //     *
 //     * @return
 //     */
-//    public boolean isReconnectEnabled()
-//    {
-//        return preferences.getBoolean(
-//                resources.getString(R.string.key_reconnect),
-//                Boolean.parseBoolean(resources.getString(R.string.default_reconnect))
-//        );
-//    }
+    public boolean isReconnectEnabled()
+    {
+        return preferences.getBoolean(
+                resources.getString(R.string.key_reconnect),
+                Boolean.parseBoolean(resources.getString(R.string.default_reconnect))
+        );
+    }
 //
 //    /**
 //     * Get the reconnect interval
 //     *
 //     * @return The reconnect interval in minutes
 //     */
-//    public int getReconnectInterval()
-//    {
-//        return Integer.parseInt(preferences.getString(
-//                resources.getString(R.string.key_reconnect_interval),
-//                resources.getString(R.string.default_reconnect_interval)
-//        ));
-//    }
+    public int getReconnectInterval()
+    {
+        return Integer.parseInt(preferences.getString(
+                resources.getString(R.string.key_reconnect_interval),
+                resources.getString(R.string.default_reconnect_interval)
+        ));
+    }
 //
 //    /**
 //     * Ignore the automatic MOTD?
@@ -240,13 +242,13 @@ public class Settings
 //     *
 //     * @return True if joins, parts and quits should be displayed, false otherwise
 //     */
-//    public boolean showJoinPartAndQuit()
-//    {
-//        return preferences.getBoolean(
-//            resources.getString(R.string.key_show_joinpartquit),
-//            Boolean.parseBoolean(resources.getString(R.string.default_show_joinpartquit))
-//        );
-//    }
+    public boolean showJoinPartAndQuit()
+    {
+        return preferences.getBoolean(
+            resources.getString(R.string.key_show_joinpartquit),
+            Boolean.parseBoolean(resources.getString(R.string.default_show_joinpartquit))
+        );
+    }
 //
 //    /**
 //     * Should notices be shown in the server window instead in the focused window?
