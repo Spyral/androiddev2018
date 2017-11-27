@@ -31,7 +31,7 @@ public class ChatboxFragment extends Fragment{
         View view = inflater.inflate(R.layout.fragment_chatbox, container, false);
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.chatbox);
-        mLayoutManager = new LinearLayoutManager(getContext());
+        mLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
         mAdapter = new ChatboxAdapter(chatList);
@@ -49,8 +49,6 @@ public class ChatboxFragment extends Fragment{
         // Scroll to bottom
         mRecyclerView.smoothScrollToPosition(mRecyclerView.getAdapter().getItemCount() - 1);
     }
-
-
 
     public class ChatboxAdapter extends RecyclerView.Adapter<ChatboxAdapter.MyViewHolder> {
         private List<Chat> chatList;

@@ -18,11 +18,7 @@ import android.widget.ImageButton;
 
 public class SenderFragment extends Fragment {
 
-<<<<<<< HEAD
-
-=======
     private EditText input;
->>>>>>> 8abdd617b58c04d2b6f4073828c6ade20c098c86
 
     @Nullable
     @Override
@@ -36,6 +32,7 @@ public class SenderFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 sendMessage();
+                hideKeyboard();
             }
         });
 
@@ -45,7 +42,14 @@ public class SenderFragment extends Fragment {
     private void sendMessage() {
         ConnectServerActivity.user.setMessage(input.getText().toString());
         ChatboxFragment.updateChat(ConnectServerActivity.user.getUsername(), ConnectServerActivity.user.getMessage());
-        input.setText("");
     }
 
+    private void hideKeyboard() {
+        input.setText("");
+        View view = getActivity().getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
 }
