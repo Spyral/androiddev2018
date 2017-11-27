@@ -7,7 +7,7 @@
     tools:context="vn.edu.usth.irc.ChatboxAndSenderFragment">
 
     <fragment
-        android:id="@+id/chatbox"
+        android:id="@+id/fragment_chatbox"
         android:name="vn.edu.usth.irc.ChatboxFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,11 +15,11 @@
         tools:layout="@layout/fragment_chatbox" />
 
     <fragment
-        android:id="@+id/sender"
+        android:id="@+id/fragment_sender"
         android:name="vn.edu.usth.irc.SenderFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/chatbox"
+        android:layout_alignParentBottom="true"
         tools:layout="@layout/fragment_sender" />
 
 </RelativeLayout>

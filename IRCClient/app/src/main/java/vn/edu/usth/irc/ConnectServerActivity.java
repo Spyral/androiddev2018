@@ -7,16 +7,25 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.EditText;
 
 public class ConnectServerActivity extends AppCompatActivity {
+
+    public static User user;
+    public EditText userName;
+    public EditText realName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect_sever);
+
+        userName = (EditText) findViewById(R.id.username);
+        realName = (EditText) findViewById(R.id.real_name);
     }
 
     public void connect (View view){
+        setupUserInfo();
         Intent i = new Intent(this, MainActivity.class);
         startActivity(i);
 //        Function to check connection to the server
@@ -45,6 +54,10 @@ public class ConnectServerActivity extends AppCompatActivity {
             finish();
         }
         super.onBackPressed();
+    }
+
+    private void setupUserInfo() {
+        user = new User(userName.getText().toString(), realName.getText().toString());
     }
 }
 
