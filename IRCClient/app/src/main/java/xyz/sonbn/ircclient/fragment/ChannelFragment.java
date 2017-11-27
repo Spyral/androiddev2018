@@ -46,6 +46,8 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
     private ChannelReceiver mChannelReceiver;
     private ServerReceiver mServerListener;
 
+    private IRCBinder binder;
+
     public ChannelFragment() {
         setHasOptionsMenu(true);
     }
@@ -101,6 +103,7 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
 
         //Start service
         Intent intent = new Intent(getActivity(), IRCService.class);
+        intent.setAction(IRCService.ACTION_FOREGROUND);
         getActivity().startService(intent);
         getActivity().bindService(intent, this, 0);
     }
@@ -127,11 +130,12 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-
+        binder = (IRCBinder) service;
+        binder.connect(mServer);
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-
+        binder = null;
     }
 }

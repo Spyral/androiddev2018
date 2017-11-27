@@ -16,6 +16,7 @@ import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.activity.AddServerActivity;
 import xyz.sonbn.ircclient.activity.ClientActivity;
 import xyz.sonbn.ircclient.adapter.ServersAdapter;
+import xyz.sonbn.ircclient.irc.IRCBinder;
 import xyz.sonbn.ircclient.model.Server;
 
 public class OverviewFragment extends Fragment implements View.OnClickListener, ServersAdapter.ClickListener {
@@ -92,7 +93,12 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
 
     @Override
     public void onConnectToServer(Server server) {
+        IRCBinder binder = activity.getBinder();
 
+        if (binder != null){
+            binder.connect(server);
+            adapter.notifyDataSetChanged();
+        }
     }
 
     @Override

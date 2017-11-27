@@ -1,6 +1,9 @@
 package xyz.sonbn.ircclient.activity;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -18,17 +21,20 @@ import xyz.sonbn.ircclient.fragment.ActiveUserFragment;
 import xyz.sonbn.ircclient.fragment.ChannelFragment;
 import xyz.sonbn.ircclient.fragment.OverviewFragment;
 import xyz.sonbn.ircclient.fragment.dummy.DummyContent;
+import xyz.sonbn.ircclient.irc.IRCBinder;
+import xyz.sonbn.ircclient.listener.ServerListener;
 import xyz.sonbn.ircclient.model.Extra;
 import xyz.sonbn.ircclient.model.Server;
 import xyz.sonbn.ircclient.util.AppManager;
 
-public class MainActivity extends AppCompatActivity implements ClientActivity, ActiveUserFragment.OnListFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements ClientActivity, ActiveUserFragment.OnListFragmentInteractionListener, ServiceConnection, ServerListener {
     private static final String TAG = "MainActivity";
     private ActionBarDrawerToggle toggle;
     private Toolbar toolbar;
     private DrawerLayout drawer;
     private LinearLayout serverContainer;
     private View drawerEmptyView;
+    private IRCBinder mBinder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +72,11 @@ public class MainActivity extends AppCompatActivity implements ClientActivity, A
     @Override
     public Toolbar getToolbar() {
         return toolbar;
+    }
+
+    @Override
+    public IRCBinder getBinder() {
+        return mBinder;
     }
 
     @Override
@@ -133,6 +144,16 @@ public class MainActivity extends AppCompatActivity implements ClientActivity, A
 
     @Override
     public void onListFragmentInteraction(DummyContent.DummyItem item) {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        mBinder = (IRCBinder) service;
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
 
     }
 }

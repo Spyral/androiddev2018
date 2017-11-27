@@ -16,6 +16,8 @@ import xyz.sonbn.ircclient.util.AppManager;
  */
 
 public class IRCService extends Service {
+    public static final String ACTION_FOREGROUND = "xyz.sonbn.ircclient.irc.foreground";
+
     private final IRCBinder mBinder;
     private HashMap<Integer, IRCConnection> mConnections;
 
