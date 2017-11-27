@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ public class IRCService extends Service {
         super();
         mConnections = new HashMap<Integer, IRCConnection>( );
         mBinder = new IRCBinder(this);
+        Log.d("IRCService", "contruct");
     }
 
     @Override
@@ -47,6 +49,9 @@ public class IRCService extends Service {
             public void run() {
                 try {
                     IRCConnection connection = getConnection(serverId);
+                    connection.setNickname(server.getNickname());
+                    connection.setRealName(server.getRealname());
+                    connection.connect(server.getHost(), server.getPort());
                 } catch (Exception e){
                     e.printStackTrace();
                 }

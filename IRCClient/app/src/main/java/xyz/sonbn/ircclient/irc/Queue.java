@@ -12,7 +12,17 @@ public class Queue extends Object {
     }
 
 
+
+
     private final Vector<Object> mQueue = new Vector<Object>();
+
+    public void add(Object o) {
+        synchronized(mQueue) {
+            mQueue.addElement(o);
+            mQueue.notify();
+        }
+    }
+
     public Object next(){
         Object o;
         synchronized (mQueue){

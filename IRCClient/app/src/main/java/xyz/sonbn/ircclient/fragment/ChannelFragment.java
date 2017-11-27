@@ -11,13 +11,9 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.ImageButton;
 
 import xyz.sonbn.ircclient.R;
 import xyz.sonbn.ircclient.activity.ClientActivity;
@@ -27,9 +23,7 @@ import xyz.sonbn.ircclient.irc.IRCService;
 import xyz.sonbn.ircclient.listener.ChannelListener;
 import xyz.sonbn.ircclient.listener.ServerListener;
 import xyz.sonbn.ircclient.model.Broadcast;
-import xyz.sonbn.ircclient.model.Conversation;
 import xyz.sonbn.ircclient.model.Extra;
-import xyz.sonbn.ircclient.model.Message;
 import xyz.sonbn.ircclient.model.Server;
 import xyz.sonbn.ircclient.model.Status;
 import xyz.sonbn.ircclient.receiver.ChannelReceiver;
@@ -37,16 +31,11 @@ import xyz.sonbn.ircclient.receiver.ServerReceiver;
 import xyz.sonbn.ircclient.util.AppManager;
 
 
-public class ChannelFragment extends Fragment implements ChannelListener, ServerListener, ServiceConnection {
+public class ChannelFragment extends Fragment implements ChannelListener, ServerListener {
     public static final String TRANSACTION_TAG = "fragment_channel";
 
     private int mServerId;
     private Server mServer;
-
-    private ChannelReceiver mChannelReceiver;
-    private ServerReceiver mServerListener;
-
-    private IRCBinder binder;
 
     public ChannelFragment() {
         setHasOptionsMenu(true);
@@ -91,21 +80,7 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
 
     @Override
     public void onResume() {
-        mChannelReceiver = new ChannelReceiver(mServerId, this);
-        getActivity().registerReceiver(mChannelReceiver, new IntentFilter(Broadcast.CONVERSATION_MESSAGE));
-        getActivity().registerReceiver(mChannelReceiver, new IntentFilter(Broadcast.CONVERSATION_NEW));
-        getActivity().registerReceiver(mChannelReceiver, new IntentFilter(Broadcast.CONVERSATION_REMOVE));
-        getActivity().registerReceiver(mChannelReceiver, new IntentFilter(Broadcast.CONVERSATION_TOPIC));
-
-        mServerListener = new ServerReceiver(this);
-        getActivity().registerReceiver(mServerListener, new IntentFilter(Broadcast.SERVER_UPDATE));
         super.onResume();
-
-        //Start service
-        Intent intent = new Intent(getActivity(), IRCService.class);
-        intent.setAction(IRCService.ACTION_FOREGROUND);
-        getActivity().startService(intent);
-        getActivity().bindService(intent, this, 0);
     }
 
     @Override
@@ -126,16 +101,5 @@ public class ChannelFragment extends Fragment implements ChannelListener, Server
     @Override
     public void onTopicChanged(String target) {
 
-    }
-
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        binder = (IRCBinder) service;
-        binder.connect(mServer);
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        binder = null;
     }
 }
