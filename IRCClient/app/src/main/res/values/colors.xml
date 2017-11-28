@@ -5,4 +5,6 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="cardview_background">#FFFFFF</color>
+    <color name="connected">#4CAF50</color>
+    <color name="disconnected">#F44336</color>
 </resources>

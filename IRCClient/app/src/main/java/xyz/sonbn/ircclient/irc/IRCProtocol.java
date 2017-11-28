@@ -1,5 +1,6 @@
 package xyz.sonbn.ircclient.irc;
 
+import android.util.Base64;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -7,9 +8,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -17,7 +20,14 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
+
 import xyz.sonbn.ircclient.model.User;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by sonbn on 11/24/2017.
@@ -29,56 +39,348 @@ public abstract class IRCProtocol {
     public static final int RPL_TOPICINFO = 333;;
     public static final int RPL_NAMREPLY = 353;
     public static final int RPL_ENDOFNAMES = 366;
+
     public static final String VERSION = "1.4.6";
 
-    private final String _channelPrefixes = "#&+!";
+    private static final int OP_ADD = 1;
+    private static final int OP_REMOVE = 2;
+    private static final int VOICE_ADD = 3;
+    private static final int VOICE_REMOVE = 4;
 
-    private final int DEFAULT_PORT = 6667;
+    // Connection stuff.
+    private InputThread _inputThread = null;
+    private OutputThread _outputThread = null;
+    private String _charset = null;
+    private InetAddress _inetAddress = null;
+    private Socket _socket = null;
 
-    private String mHostname, mPassword;
-    private int mPort;
-    private Socket mSocket;
-    private InetAddress mInetAddress;
-    private long mMessageDelay = 1000;
-    private String mName, mVersion;
-    private InputThread mInputThread = null;
-    private OutputThread mOutputThread = null;
+    // Details about the last server that we connected to.
+    private String _server = null;
+    private int _port = -1;
+    private String _password = null;
+
+    // Outgoing message stuff.
     private final Queue _outQueue = new Queue();
-    private boolean _autoNickChange = false;
-    private int _autoNickTries = 1;
-    private String _name = "PircBot";
-    private String _login = "PircBot";
-    private final List<String> _aliases = new ArrayList<String>();
-    private String _nick = _name;
+    private long _messageDelay = 1000;
+
+    // SASL
+    private String saslUsername;
+    private String saslPassword;
+
+    // A Hashtable of channels that points to a selfreferential Hashtable of
+    // User objects (used to remember which users are in which channels).
+    private Hashtable<String, Hashtable<User, User>> _channels = new Hashtable<String, Hashtable<User, User>>();
+
+    // A Hashtable to temporarily store channel topics when we join them
+    // until we find out who set that topic.
     private final Hashtable<String, String> _topics = new Hashtable<String, String>();
 
+    // DccManager to process and handle all DCC events.
+    private int[] _dccPorts = null;
+    private InetAddress _dccInetAddress = null;
+
+    // Default settings for the PircBot.
+    private boolean _autoNickChange = false;
+    private int _autoNickTries = 1;
+    private boolean _useSSL = false;
+    private boolean _registered = false;
+
+    private String _name = "PircBot";
+    private final List<String> _aliases = new ArrayList<String>();
+    private String _nick = _name;
+    private String _login = "PircBot";
     private String _version = "PircBot " + VERSION + " Java IRC Bot - www.jibble.org";
     private String _finger = "You ought to be arrested for fingering a bot!";
 
-    private boolean isRegisterd;
+    private final String _channelPrefixes = "#&+!";
 
-    private Hashtable<String, Hashtable<User, User>> _channels = new Hashtable<String, Hashtable<User, User>>();
+    public IRCProtocol() {}
 
-    public IRCProtocol() {
+    public final synchronized void connect(String hostname) throws IOException, IrcException, NickAlreadyInUseException {
+        this.connect(hostname, 6667, null);
     }
 
-    public long getMessageDelay() {
-        return mMessageDelay;
+    public final synchronized void connect(String hostname, int port) throws IOException, IrcException, NickAlreadyInUseException {
+        this.connect(hostname, port, null);
     }
 
-    public void setMessageDelay(long messageDelay) {
-        if (messageDelay < 0){
-            throw new IllegalArgumentException("Time cannot negative");
+    public final synchronized void connect(String hostname, int port, String password) throws IOException, IrcException, NickAlreadyInUseException {
+        _registered = false;
+
+        _server = hostname;
+        _port = port;
+        _password = password;
+
+        if (isConnected()) {
+            throw new IOException("The PircBot is already connected to an IRC server.  Disconnect first.");
         }
-        mMessageDelay = messageDelay;
+        _autoNickTries = 1;
+
+        // Don't clear the outqueue - there might be something important in it!
+
+        // Clear everything we may have know about channels.
+        this.removeAllChannels();
+
+        // Connect to the server.
+
+        // XXX: PircBot Patch for SSL
+        if (_useSSL) {
+            try {
+                SSLContext context = SSLContext.getInstance("TLS");
+                context.init(null, new X509TrustManager[] { new NaiveTrustManager() }, null);
+                SSLSocketFactory factory = context.getSocketFactory();
+                SSLSocket ssocket = (SSLSocket) factory.createSocket(hostname, port);
+                setSNIHost(factory, ssocket, hostname);
+                ssocket.startHandshake();
+                _socket = ssocket;
+            }
+            catch(Exception e)
+            {
+                // XXX: It's not really an IOException :)
+                throw new IOException("Cannot open SSL socket");
+            }
+        } else {
+            _socket =  new Socket(hostname, port);
+        }
+
+        _inetAddress = _socket.getLocalAddress();
+
+        InputStreamReader inputStreamReader = null;
+        OutputStreamWriter outputStreamWriter = null;
+
+        if (getEncoding() != null) {
+            // Assume the specified encoding is valid for this JVM.
+            inputStreamReader = new InputStreamReader(_socket.getInputStream(), getEncoding());
+            outputStreamWriter = new OutputStreamWriter(_socket.getOutputStream(), getEncoding());
+        }
+        else {
+            // Otherwise, just use the JVM's default encoding.
+            inputStreamReader = new InputStreamReader(_socket.getInputStream());
+            outputStreamWriter = new OutputStreamWriter(_socket.getOutputStream());
+        }
+
+        BufferedReader breader = new BufferedReader(inputStreamReader);
+        BufferedWriter bwriter = new BufferedWriter(outputStreamWriter);
+
+        // Attempt to join the server.
+        if (password != null && !password.equals("")) {
+            OutputThread.sendRawLine(this, bwriter, "PASS " + password);
+        }
+        String nick = this.getName();
+
+
+        if (saslUsername != null) {
+            OutputThread.sendRawLine(this, bwriter, "CAP LS");
+            OutputThread.sendRawLine(this, bwriter, "CAP REQ :sasl");
+            OutputThread.sendRawLine(this, bwriter, "CAP END");
+
+            OutputThread.sendRawLine(this, bwriter, "AUTHENTICATE PLAIN");
+
+            String authString = saslUsername + "\0" + saslUsername + "\0" + saslPassword;
+
+            String authStringEncoded = Base64.encodeToString(authString.getBytes(), Base64.NO_WRAP);
+
+            while (authStringEncoded.length() >= 400) {
+                String toSend = authStringEncoded.substring(0, 400);
+                authString = authStringEncoded.substring(400);
+
+                OutputThread.sendRawLine(this, bwriter, "AUTHENTICATE " + toSend);
+            }
+
+            if (authStringEncoded.length() > 0) {
+                OutputThread.sendRawLine(this, bwriter, "AUTHENTICATE " + authStringEncoded);
+            } else {
+                OutputThread.sendRawLine(this, bwriter, "AUTHENTICATE +");
+            }
+        }
+
+        OutputThread.sendRawLine(this, bwriter, "NICK " + nick);
+        OutputThread.sendRawLine(this, bwriter, "USER " + this.getLogin() + " 8 * :" + this.getVersion());
+
+        _inputThread = new InputThread(this, _socket, breader, bwriter);
+
+        // XXX: PircBot Patch - Set nick before loop. otherwise we overwrite it in the loop again and again
+        //                      But maybe we got a new nickname from the server (bouncers!)
+        this.setNick(nick);
+
+        // Read stuff back from the server to see if we connected.
+        String line = null;
+        line = breader.readLine();
+
+        Log.d("Test", line);
+
+        // XXX: PircBot patch - We are not connected to server if nothing received
+        if (line == null) {
+            throw new IOException("Could not connect to server");
+        }
+
+        // Send the first line to handleLine before the InputThread is started.
+        this.handleLine(line);
+
+        // This makes the socket timeout on read operations after 5 minutes.
+        // Maybe in some future version I will let the user change this at runtime.
+        _socket.setSoTimeout(5 * 60 * 1000);
+
+        // Now start the InputThread to read all other lines from the server.
+        _inputThread.start();
+
+        // Now start the outputThread that will be used to send all messages.
+        if (_outputThread == null) {
+            _outputThread = new OutputThread(this, _outQueue);
+            _outputThread.start();
+        }
+
+        this.onConnect();
     }
 
-    protected void handleCommand(String rawCommand) throws IOException{
+    private void setSNIHost(final SSLSocketFactory factory, final SSLSocket socket, final String hostname) {
+        if (factory instanceof android.net.SSLCertificateSocketFactory && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            ((android.net.SSLCertificateSocketFactory)factory).setHostname(socket, hostname);
+        } else {
+            try {
+                socket.getClass().getMethod("setHostname", String.class).invoke(socket, hostname);
+            } catch (Throwable e) {
+                // ignore any error, we just can't set the hostname...
+            }
+        }
+    }
+
+    public void setUseSSL(boolean useSSL)
+    {
+        _useSSL = useSSL;
+    }
+
+    public void setSaslCredentials(String username, String password)
+    {
+        this.saslUsername = username;
+        this.saslPassword = password;
+    }
+
+    public void setAutoNickChange(boolean autoNickChange) {
+        _autoNickChange = autoNickChange;
+    }
+
+    public final void joinChannel(String channel) {
+        this.sendRawLine("JOIN " + channel);
+    }
+
+    public final void joinChannel(String channel, String key) {
+        this.joinChannel(channel + " " + key);
+    }
+
+    public final void partChannel(String channel) {
+        this.sendRawLine("PART " + channel);
+    }
+
+    public void quitServer() {
+        this.quitServer("");
+    }
+
+    public void quitServer(String reason) {
+        this.sendRawLine("QUIT :" + reason);
+    }
+
+    public final synchronized void sendRawLine(String line) {
+        if (isConnected()) {
+            _inputThread.sendRawLine(line);
+        }
+    }
+
+    public final synchronized void sendRawLineViaQueue(String line) {
+        if (line == null) {
+            throw new NullPointerException("Cannot send null messages to server");
+        }
+        if (isConnected()) {
+            _outQueue.add(line);
+        }
+    }
+
+    public final void sendMessage(String target, String message) {
+        _outQueue.add("PRIVMSG " + target + " :" + message);
+    }
+
+    public final void sendAction(String target, String action) {
+        sendCTCPCommand(target, "ACTION " + action);
+    }
+
+    public final void sendNotice(String target, String notice) {
+        _outQueue.add("NOTICE " + target + " :" + notice);
+    }
+
+    public final void sendCTCPCommand(String target, String command) {
+        _outQueue.add("PRIVMSG " + target + " :\u0001" + command + "\u0001");
+    }
+
+    public final void changeNick(String newNick) {
+        this.sendRawLine("NICK " + newNick);
+    }
+
+    public final void identify(String password) {
+        this.sendRawLine("NICKSERV IDENTIFY " + password);
+    }
+
+    public final void setMode(String channel, String mode) {
+        this.sendRawLine("MODE " + channel + " " + mode);
+    }
+
+    public final void ban(String channel, String hostmask) {
+        this.sendRawLine("MODE " + channel + " +b " + hostmask);
+    }
+
+    public final void unBan(String channel, String hostmask) {
+        this.sendRawLine("MODE " + channel + " -b " + hostmask);
+    }
+
+    public final void op(String channel, String nick) {
+        this.setMode(channel, "+o " + nick);
+    }
+
+    public final void deOp(String channel, String nick) {
+        this.setMode(channel, "-o " + nick);
+    }
+
+    public final void voice(String channel, String nick) {
+        this.setMode(channel, "+v " + nick);
+    }
+
+    public final void deVoice(String channel, String nick) {
+        this.setMode(channel, "-v " + nick);
+    }
+
+    public final void setTopic(String channel, String topic) {
+        this.sendRawLine("TOPIC " + channel + " :" + topic);
+    }
+
+    public final void kick(String channel, String nick) {
+        this.kick(channel, nick, "");
+    }
+
+    public final void kick(String channel, String nick, String reason) {
+        this.sendRawLine("KICK " + channel + " " + nick + " :" + reason);
+    }
+
+    public final void listChannels(String parameters) {
+        if (parameters == null) {
+            this.sendRawLine("LIST");
+        }
+        else {
+            this.sendRawLine("LIST " + parameters);
+        }
+    }
+
+    protected void handleLine(String line) throws NickAlreadyInUseException, IOException {
+        // Check for server pings.
+        if (line.startsWith("PING ")) {
+            // Respond to the ping and return immediately.
+            this.onServerPing(line.substring(5));
+            return;
+        }
+
         String sourceNick = "";
         String sourceLogin = "";
         String sourceHostname = "";
 
-        StringTokenizer tokenizer = new StringTokenizer(rawCommand);
+        StringTokenizer tokenizer = new StringTokenizer(line);
         String senderInfo = tokenizer.nextToken();
         String command = tokenizer.nextToken();
         String target = null;
@@ -106,11 +408,11 @@ public abstract class IRCProtocol {
 
                     if (code != -1) {
                         String errorStr = token;
-                        String response = rawCommand.substring(rawCommand.indexOf(errorStr, senderInfo.length()) + 4, rawCommand.length());
+                        String response = line.substring(line.indexOf(errorStr, senderInfo.length()) + 4, line.length());
 
                         this.processServerResponse(code, response);
 
-                        if (code == 433 && !isRegisterd) {
+                        if (code == 433 && !_registered) {
                             if (_autoNickChange) {
                                 String oldNick = _nick;
 
@@ -131,8 +433,9 @@ public abstract class IRCProtocol {
                                 this.sendRawLineViaQueue("NICK " + _nick);
                             }
                             else {
-                                mSocket.close();
-                                mInputThread = null;
+                                _socket.close();
+                                _inputThread = null;
+                                throw new NickAlreadyInUseException(line);
                             }
                         }
 
@@ -158,12 +461,12 @@ public abstract class IRCProtocol {
                         }
                     }
                 }
-//                else {
-//                    // We don't know what this line means.
-//                    this.onUnknown(line);
-//                    // Return from the method;
-//                    return;
-//                }
+                else {
+                    // We don't know what this line means.
+                    this.onUnknown(line);
+                    // Return from the method;
+                    return;
+                }
 
             }
         }
@@ -180,41 +483,41 @@ public abstract class IRCProtocol {
         }
 
         // Check for CTCP requests.
-        if (command.equals("PRIVMSG") && rawCommand.indexOf(":\u0001") > 0 && rawCommand.endsWith("\u0001")) {
-            String request = rawCommand.substring(rawCommand.indexOf(":\u0001") + 2, rawCommand.length() - 1);
-//            if (request.equals("VERSION")) {
-//                // VERSION request
-//                this.onVersion(sourceNick, sourceLogin, sourceHostname, target);
-//            }
-//            else if (request.startsWith("ACTION ")) {
-//                // ACTION request
-//                this.onAction(sourceNick, sourceLogin, sourceHostname, target, request.substring(7));
-//            }
-//            else if (request.startsWith("PING ")) {
-//                // PING request
-//                this.onPing(sourceNick, sourceLogin, sourceHostname, target, request.substring(5));
-//            }
-//            else if (request.equals("TIME")) {
-//                // TIME request
-//                this.onTime(sourceNick, sourceLogin, sourceHostname, target);
-//            }
-//            else if (request.equals("FINGER")) {
-//                // FINGER request
-//                this.onFinger(sourceNick, sourceLogin, sourceHostname, target);
-//            }
-//            else {
-//                // An unknown CTCP message - ignore it.
-//                this.onUnknown(line);
-//            }
+        if (command.equals("PRIVMSG") && line.indexOf(":\u0001") > 0 && line.endsWith("\u0001")) {
+            String request = line.substring(line.indexOf(":\u0001") + 2, line.length() - 1);
+            if (request.equals("VERSION")) {
+                // VERSION request
+                this.onVersion(sourceNick, sourceLogin, sourceHostname, target);
+            }
+            else if (request.startsWith("ACTION ")) {
+                // ACTION request
+                this.onAction(sourceNick, sourceLogin, sourceHostname, target, request.substring(7));
+            }
+            else if (request.startsWith("PING ")) {
+                // PING request
+                this.onPing(sourceNick, sourceLogin, sourceHostname, target, request.substring(5));
+            }
+            else if (request.equals("TIME")) {
+                // TIME request
+                this.onTime(sourceNick, sourceLogin, sourceHostname, target);
+            }
+            else if (request.equals("FINGER")) {
+                // FINGER request
+                this.onFinger(sourceNick, sourceLogin, sourceHostname, target);
+            }
+            else {
+                // An unknown CTCP message - ignore it.
+                this.onUnknown(line);
+            }
         }
         else if (command.equals("PRIVMSG") && _channelPrefixes.indexOf(target.charAt(0)) >= 0) {
             // This is a normal message to a channel.
-            this.onMessage(target, sourceNick, sourceLogin, sourceHostname, rawCommand.substring(rawCommand.indexOf(" :") + 2));
+            this.onMessage(target, sourceNick, sourceLogin, sourceHostname, line.substring(line.indexOf(" :") + 2));
         }
         else if (command.equals("PRIVMSG")) {
             // This is a private message to us.
             // XXX PircBot patch to pass target info to privmsg callback
-            this.onPrivateMessage(sourceNick, sourceLogin, sourceHostname, target, rawCommand.substring(rawCommand.indexOf(" :") + 2));
+            this.onPrivateMessage(sourceNick, sourceLogin, sourceHostname, target, line.substring(line.indexOf(" :") + 2));
         }
         else if (command.equals("JOIN")) {
             // Someone is joining a channel.
@@ -225,7 +528,7 @@ public abstract class IRCProtocol {
         else if (command.equals("PART")) {
             // Someone is parting from a channel.
             this.removeUser(target, sourceNick);
-            if (sourceNick.equals((getNick()))) {
+            if (sourceNick.equals(this.getNick())) {
                 this.removeChannel(target);
             }
             this.onPart(target, sourceNick, sourceLogin, sourceHostname);
@@ -242,14 +545,14 @@ public abstract class IRCProtocol {
         }
         else if (command.equals("NOTICE")) {
             // Someone is sending a notice.
-            this.onNotice(sourceNick, sourceLogin, sourceHostname, target, rawCommand.substring(rawCommand.indexOf(" :") + 2));
+            this.onNotice(sourceNick, sourceLogin, sourceHostname, target, line.substring(line.indexOf(" :") + 2));
         }
         else if (command.equals("QUIT")) {
             // Someone has quit from the IRC server.
 
             // XXX: Pircbot Patch - Call onQuit before removing the user. This way we
             //                        are able to know which channels the user was on.
-            this.onQuit(sourceNick, sourceLogin, sourceHostname, rawCommand.substring(rawCommand.indexOf(" :") + 2));
+            this.onQuit(sourceNick, sourceLogin, sourceHostname, line.substring(line.indexOf(" :") + 2));
 
             if (sourceNick.equals(this.getNick())) {
                 this.removeAllChannels();
@@ -265,144 +568,92 @@ public abstract class IRCProtocol {
                 this.removeChannel(target);
             }
             this.removeUser(target, recipient);
-            this.onKick(target, sourceNick, sourceLogin, sourceHostname, recipient, rawCommand.substring(rawCommand.indexOf(" :") + 2));
+            this.onKick(target, sourceNick, sourceLogin, sourceHostname, recipient, line.substring(line.indexOf(" :") + 2));
         }
         else if (command.equals("MODE")) {
             // Somebody is changing the mode on a channel or user.
-            String mode = rawCommand.substring(rawCommand.indexOf(target, 2) + target.length() + 1);
+            String mode = line.substring(line.indexOf(target, 2) + target.length() + 1);
             if (mode.startsWith(":")) {
                 mode = mode.substring(1);
             }
-//            this.processMode(target, sourceNick, sourceLogin, sourceHostname, mode);
+            this.processMode(target, sourceNick, sourceLogin, sourceHostname, mode);
         }
         else if (command.equals("TOPIC")) {
             // Someone is changing the topic.
-            this.onTopic(target, rawCommand.substring(rawCommand.indexOf(" :") + 2), sourceNick, System.currentTimeMillis(), true);
+            this.onTopic(target, line.substring(line.indexOf(" :") + 2), sourceNick, System.currentTimeMillis(), true);
         }
         else if (command.equals("INVITE")) {
             // Somebody is inviting somebody else into a channel.
-            this.onInvite(target, sourceNick, sourceLogin, sourceHostname, rawCommand.substring(rawCommand.indexOf(" :") + 2));
+            this.onInvite(target, sourceNick, sourceLogin, sourceHostname, line.substring(line.indexOf(" :") + 2));
         }
         else {
             // If we reach this point, then we've found something that the PircBot
             // Doesn't currently deal with.
-            this.onUnknown(rawCommand);
-        }
-    }
-
-    //Overloading connect
-    public final synchronized void connect(String hostname) throws IOException{
-        connect(hostname, DEFAULT_PORT, null);
-    }
-
-    public final synchronized void connect(String hostname, int port) throws IOException{
-        connect(hostname, port, null);
-    }
-
-    public final synchronized void connect(String hostname, int port, String password) throws IOException{
-        mHostname = hostname;
-        mPort = port;
-        mPassword = password;
-
-        mSocket = new Socket(mHostname, mPort);
-
-        mInetAddress = mSocket.getLocalAddress();
-
-        InputStreamReader inputStreamReader = new InputStreamReader(mSocket.getInputStream());
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(mSocket.getOutputStream());
-
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-
-        String nick = getName();
-
-        OutputThread.sendRawLine(this, bufferedWriter, "NICK " + nick);
-        OutputThread.sendRawLine(this, bufferedWriter, "USER " + getLogin() + " 8 * :" + getVersion());
-        OutputThread.sendRawLine(this, bufferedWriter, "JOIN #straifur");
-
-        mInputThread = new InputThread(this, mSocket, bufferedReader, bufferedWriter);
-
-        setNick(nick);
-
-        String line = null;
-        line = bufferedReader.readLine();
-
-        if (line == null){
-            Log.d("IRCProtocol", "No response");
+            this.onUnknown(line);
         }
 
-        handleCommand(line);
-
-        mSocket.setSoTimeout(5*60*1000);
-
-        mInputThread.start();
-
-        if (mOutputThread == null){
-            mOutputThread = new OutputThread(this, _outQueue);
-            mOutputThread.start();
-        }
-
-        onConnect();
     }
 
-    public final void joinChannel(String channel) {
-        this.sendRawLine("JOIN " + channel);
-    }
 
-    public final void joinChannel(String channel, String key) {
-        this.joinChannel(channel + " " + key);
-    }
-
-    public final synchronized void sendRawLine(String line){
-        mInputThread.sendRawLine(line);
-    }
-
-    public final synchronized void sendRawLineViaQueue(String line) {
-        if (line == null) {
-            throw new NullPointerException("Cannot send null messages to server");
-        }
-        _outQueue.add(line);
-    }
-
-    public final int getMaxLineLength() {
-        return InputThread.MAX_LINE_LENGTH;
-    }
-
-    protected final void setName(String name){
-        mName = name;
-    }
-
-    protected final void setVersion(String version){
-        mVersion = version;
-    }
-
-    private final void setNick(String nick) {
-        _nick = nick;
-    }
-
+    /**
+     * This method is called once the PircBot has successfully connected to
+     * the IRC server.
+     *  <p>
+     * The implementation of this method in the PircBot abstract class
+     * performs no actions and may be overridden as required.
+     *
+     * @since PircBot 0.9.6
+     */
     protected void onConnect() {}
 
+    /**
+     * This method is called once the client is registered with the server -
+     * meaning the client recieved server code 004.
+     *
+     * @since Yaaic
+     */
     protected void onRegister()
     {
-        isRegisterd = true;
+        _registered = true;
     }
 
-    public final ArrayList<String> getUsers(String channel) {
-        channel = channel.toLowerCase();
-        ArrayList<String> userArray = new ArrayList<>();
-        synchronized (_channels) {
-            Hashtable<User, User> users = _channels.get(channel);
-            if (users != null) {
-                Enumeration<User> enumeration = users.elements();
-                for (int i = 0; i < users.size(); i++) {
-                    User user = enumeration.nextElement();
-                    userArray.add(user.getNick());
-                }
-            }
-        }
-        return userArray;
+
+    /**
+     * This method carries out the actions to be performed when the PircBot
+     * gets disconnected.  This may happen if the PircBot quits from the
+     * server, or if the connection is unexpectedly lost.
+     *  <p>
+     * Disconnection from the IRC server is detected immediately if either
+     * we or the server close the connection normally. If the connection to
+     * the server is lost, but neither we nor the server have explicitly closed
+     * the connection, then it may take a few minutes to detect (this is
+     * commonly referred to as a "ping timeout").
+     *  <p>
+     * If you wish to get your IRC bot to automatically rejoin a server after
+     * the connection has been lost, then this is probably the ideal method to
+     * override to implement such functionality.
+     *  <p>
+     * The implementation of this method in the PircBot abstract class
+     * performs no actions and may be overridden as required.
+     */
+    protected void onDisconnect()
+    {
+        _registered = false;
     }
 
+
+    /**
+     * This method is called by the PircBot when a numeric response
+     * is received from the IRC server.  We use this method to
+     * allow PircBot to process various responses from the server
+     * before then passing them on to the onServerResponse method.
+     *  <p>
+     * Note that this method is private and should not appear in any
+     * of the javadoc generated documenation.
+     *
+     * @param code The three-digit numerical code for the response.
+     * @param response The full response from the IRC server.
+     */
     private final void processServerResponse(int code, String response) {
 
         if (code == RPL_LIST) {
@@ -482,776 +733,432 @@ public abstract class IRCProtocol {
                 this.addUser(channel, new User(prefix, nick));
             }
         }
+        else if (code == RPL_ENDOFNAMES) {
+            // This is the end of a NAMES list, so we know that we've got
+            // the full list of users in the channel that we just joined.
+            String channel = response.substring(response.indexOf(' ') + 1, response.indexOf(" :"));
+            User[] users = this.getUsers(channel);
+            this.onUserList(channel, users);
+        }
 
         this.onServerResponse(code, response);
     }
 
     protected void onServerResponse(int code, String response) {}
 
-
-    /**
-     * This method is called when we receive a user list from the server
-     * after joining a channel.
-     *  <p>
-     * Shortly after joining a channel, the IRC server sends a list of all
-     * users in that channel. The PircBot collects this information and
-     * calls this method as soon as it has the full list.
-     *  <p>
-     * To obtain the nick of each user in the channel, call the getNick()
-     * method on each User object in the array.
-     *  <p>
-     * At a later time, you may call the getUsers method to obtain an
-     * up to date list of the users in the channel.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 1.0.0
-     *
-     * @param channel The name of the channel.
-     * @param users An array of User objects belonging to this channel.
-     *
-     * @see User
-     */
     protected void onUserList(String channel, User[] users) {}
 
-
-    /**
-     * This method is called whenever a message is sent to a channel.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The channel to which the message was sent.
-     * @param sender The nick of the person who sent the message.
-     * @param login The login of the person who sent the message.
-     * @param hostname The hostname of the person who sent the message.
-     * @param message The actual message sent to the channel.
-     */
     protected void onMessage(String channel, String sender, String login, String hostname, String message) {}
 
+    protected void onPrivateMessage(String sender, String login, String hostname, String target, String message) {}
 
-    /**
-     * This method is called whenever an ACTION is sent from a user.  E.g.
-     * such events generated by typing "/me goes shopping" in most IRC clients.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param sender The nick of the user that sent the action.
-     * @param login The login of the user that sent the action.
-     * @param hostname The hostname of the user that sent the action.
-     * @param target The target of the action, be it a channel or our nick.
-     * @param action The action carried out by the user.
-     */
     protected void onAction(String sender, String login, String hostname, String target, String action) {}
 
-
-    /**
-     * This method is called whenever we receive a notice.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param sourceNick The nick of the user that sent the notice.
-     * @param sourceLogin The login of the user that sent the notice.
-     * @param sourceHostname The hostname of the user that sent the notice.
-     * @param target The target of the notice, be it our nick or a channel name.
-     * @param notice The notice message.
-     */
     protected void onNotice(String sourceNick, String sourceLogin, String sourceHostname, String target, String notice) {}
 
-
-    /**
-     * This method is called whenever someone (possibly us) joins a channel
-     * which we are on.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The channel which somebody joined.
-     * @param sender The nick of the user who joined the channel.
-     * @param login The login of the user who joined the channel.
-     * @param hostname The hostname of the user who joined the channel.
-     */
     protected void onJoin(String channel, String sender, String login, String hostname) {}
 
-
-    /**
-     * This method is called whenever someone (possibly us) parts a channel
-     * which we are on.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The channel which somebody parted from.
-     * @param sender The nick of the user who parted from the channel.
-     * @param login The login of the user who parted from the channel.
-     * @param hostname The hostname of the user who parted from the channel.
-     */
     protected void onPart(String channel, String sender, String login, String hostname) {}
 
-    /**
-     * This method is called whenever someone (possibly us) is kicked from
-     * any of the channels that we are in.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The channel from which the recipient was kicked.
-     * @param kickerNick The nick of the user who performed the kick.
-     * @param kickerLogin The login of the user who performed the kick.
-     * @param kickerHostname The hostname of the user who performed the kick.
-     * @param recipientNick The unfortunate recipient of the kick.
-     * @param reason The reason given by the user who performed the kick.
-     */
+    protected void onNickChange(String oldNick, String login, String hostname, String newNick) {}
+
     protected void onKick(String channel, String kickerNick, String kickerLogin, String kickerHostname, String recipientNick, String reason) {}
 
-
-    /**
-     * This method is called whenever someone (possibly us) quits from the
-     * server.  We will only observe this if the user was in one of the
-     * channels to which we are connected.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param sourceNick The nick of the user that quit from the server.
-     * @param sourceLogin The login of the user that quit from the server.
-     * @param sourceHostname The hostname of the user that quit from the server.
-     * @param reason The reason given for quitting the server.
-     */
     protected void onQuit(String sourceNick, String sourceLogin, String sourceHostname, String reason) {}
 
-
-    /**
-     * This method is called whenever a user sets the topic, or when
-     * PircBot joins a new channel and discovers its topic.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The channel that the topic belongs to.
-     * @param topic The topic for the channel.
-     *
-     * @deprecated As of 1.2.0, replaced by {@link #onTopic(String,String,String,long,boolean)}
-     */
     @Deprecated
     protected void onTopic(String channel, String topic) {}
 
-
-    /**
-     * This method is called whenever a user sets the topic, or when
-     * PircBot joins a new channel and discovers its topic.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The channel that the topic belongs to.
-     * @param topic The topic for the channel.
-     * @param setBy The nick of the user that set the topic.
-     * @param date When the topic was set (milliseconds since the epoch).
-     * @param changed True if the topic has just been changed, false if
-     *                the topic was already there.
-     *
-     */
     protected void onTopic(String channel, String topic, String setBy, long date, boolean changed) {}
 
-
-    /**
-     * After calling the listChannels() method in PircBot, the server
-     * will start to send us information about each channel on the
-     * server.  You may override this method in order to receive the
-     * information about each channel as soon as it is received.
-     *  <p>
-     * Note that certain channels, such as those marked as hidden,
-     * may not appear in channel listings.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param channel The name of the channel.
-     * @param userCount The number of users visible in this channel.
-     * @param topic The topic for this channel.
-     */
     protected void onChannelInfo(String channel, int userCount, String topic) {}
+
+    private final void processMode(String target, String sourceNick, String sourceLogin, String sourceHostname, String mode) {
+
+        if (_channelPrefixes.indexOf(target.charAt(0)) >= 0) {
+            // The mode of a channel is being changed.
+            String channel = target;
+            StringTokenizer tok = new StringTokenizer(mode);
+            String[] params = new String[tok.countTokens()];
+
+            int t = 0;
+            while (tok.hasMoreTokens()) {
+                params[t] = tok.nextToken();
+                t++;
+            }
+
+            char pn = ' ';
+            int p = 1;
+
+            // All of this is very large and ugly, but it's the only way of providing
+            // what the users want :-/
+            for (int i = 0; i < params[0].length(); i++) {
+                char atPos = params[0].charAt(i);
+
+                if (atPos == '+' || atPos == '-') {
+                    pn = atPos;
+                }
+                else if (atPos == 'o') {
+                    if (pn == '+') {
+                        this.updateUser(channel, OP_ADD, params[p]);
+                        onOp(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    else {
+                        this.updateUser(channel, OP_REMOVE, params[p]);
+                        onDeop(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    p++;
+                }
+                else if (atPos == 'v') {
+                    if (pn == '+') {
+                        this.updateUser(channel, VOICE_ADD, params[p]);
+                        onVoice(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    else {
+                        this.updateUser(channel, VOICE_REMOVE, params[p]);
+                        onDeVoice(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    p++;
+                }
+                else if (atPos == 'k') {
+                    if (pn == '+') {
+                        onSetChannelKey(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    else {
+                        onRemoveChannelKey(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    p++;
+                }
+                else if (atPos == 'l') {
+                    if (pn == '+') {
+                        onSetChannelLimit(channel, sourceNick, sourceLogin, sourceHostname, Integer.parseInt(params[p]));
+                        p++;
+                    }
+                    else {
+                        onRemoveChannelLimit(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+                else if (atPos == 'b') {
+                    if (pn == '+') {
+                        onSetChannelBan(channel, sourceNick, sourceLogin, sourceHostname,params[p]);
+                    }
+                    else {
+                        onRemoveChannelBan(channel, sourceNick, sourceLogin, sourceHostname, params[p]);
+                    }
+                    p++;
+                }
+                else if (atPos == 't') {
+                    if (pn == '+') {
+                        onSetTopicProtection(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                    else {
+                        onRemoveTopicProtection(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+                else if (atPos == 'n') {
+                    if (pn == '+') {
+                        onSetNoExternalMessages(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                    else {
+                        onRemoveNoExternalMessages(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+                else if (atPos == 'i') {
+                    if (pn == '+') {
+                        onSetInviteOnly(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                    else {
+                        onRemoveInviteOnly(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+                else if (atPos == 'm') {
+                    if (pn == '+') {
+                        onSetModerated(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                    else {
+                        onRemoveModerated(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+                else if (atPos == 'p') {
+                    if (pn == '+') {
+                        onSetPrivate(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                    else {
+                        onRemovePrivate(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+                else if (atPos == 's') {
+                    if (pn == '+') {
+                        onSetSecret(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                    else {
+                        onRemoveSecret(channel, sourceNick, sourceLogin, sourceHostname);
+                    }
+                }
+            }
+
+            this.onMode(channel, sourceNick, sourceLogin, sourceHostname, mode);
+        }
+        else {
+            // The mode of a user is being changed.
+            String nick = target;
+            this.onUserMode(nick, sourceNick, sourceLogin, sourceHostname, mode);
+        }
+    }
 
     protected void onMode(String channel, String sourceNick, String sourceLogin, String sourceHostname, String mode) {}
 
-
-    /**
-     * Called when the mode of a user is set.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 1.2.0
-     *
-     * @param targetNick The nick that the mode operation applies to.
-     * @param sourceNick The nick of the user that set the mode.
-     * @param sourceLogin The login of the user that set the mode.
-     * @param sourceHostname The hostname of the user that set the mode.
-     * @param mode The mode that has been set.
-     *
-     */
     protected void onUserMode(String targetNick, String sourceNick, String sourceLogin, String sourceHostname, String mode) {}
 
-
-
-    /**
-     * Called when a user (possibly us) gets granted operator status for a channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param recipient The nick of the user that got 'opped'.
-     */
     protected void onOp(String channel, String sourceNick, String sourceLogin, String sourceHostname, String recipient) {}
 
-
-    /**
-     * Called when a user (possibly us) gets operator status taken away.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param recipient The nick of the user that got 'deopped'.
-     */
     protected void onDeop(String channel, String sourceNick, String sourceLogin, String sourceHostname, String recipient) {}
 
-
-    /**
-     * Called when a user (possibly us) gets voice status granted in a channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param recipient The nick of the user that got 'voiced'.
-     */
     protected void onVoice(String channel, String sourceNick, String sourceLogin, String sourceHostname, String recipient) {}
 
-
-    /**
-     * Called when a user (possibly us) gets voice status removed.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param recipient The nick of the user that got 'devoiced'.
-     */
     protected void onDeVoice(String channel, String sourceNick, String sourceLogin, String sourceHostname, String recipient) {}
 
-
-    /**
-     * Called when a channel key is set.  When the channel key has been set,
-     * other users may only join that channel if they know the key.  Channel keys
-     * are sometimes referred to as passwords.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param key The new key for the channel.
-     */
     protected void onSetChannelKey(String channel, String sourceNick, String sourceLogin, String sourceHostname, String key) {}
 
-
-    /**
-     * Called when a channel key is removed.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param key The key that was in use before the channel key was removed.
-     */
     protected void onRemoveChannelKey(String channel, String sourceNick, String sourceLogin, String sourceHostname, String key) {}
 
-
-    /**
-     * Called when a user limit is set for a channel.  The number of users in
-     * the channel cannot exceed this limit.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param limit The maximum number of users that may be in this channel at the same time.
-     */
     protected void onSetChannelLimit(String channel, String sourceNick, String sourceLogin, String sourceHostname, int limit) {}
 
-
-    /**
-     * Called when the user limit is removed for a channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemoveChannelLimit(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a user (possibly us) gets banned from a channel.  Being
-     * banned from a channel prevents any user with a matching hostmask from
-     * joining the channel.  For this reason, most bans are usually directly
-     * followed by the user being kicked :-)
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param hostmask The hostmask of the user that has been banned.
-     */
     protected void onSetChannelBan(String channel, String sourceNick, String sourceLogin, String sourceHostname, String hostmask) {}
 
-
-    /**
-     * Called when a hostmask ban is removed from a channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     * @param hostmask
-     */
     protected void onRemoveChannelBan(String channel, String sourceNick, String sourceLogin, String sourceHostname, String hostmask) {}
 
-
-    /**
-     * Called when topic protection is enabled for a channel.  Topic protection
-     * means that only operators in a channel may change the topic.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onSetTopicProtection(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when topic protection is removed for a channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemoveTopicProtection(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is set to only allow messages from users that
-     * are in the channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onSetNoExternalMessages(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is set to allow messages from any user, even
-     * if they are not actually in the channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemoveNoExternalMessages(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is set to 'invite only' mode.  A user may only
-     * join the channel if they are invited by someone who is already in the
-     * channel.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onSetInviteOnly(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel has 'invite only' removed.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemoveInviteOnly(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is set to 'moderated' mode.  If a channel is
-     * moderated, then only users who have been 'voiced' or 'opped' may speak
-     * or change their nicks.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onSetModerated(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel has moderated mode removed.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemoveModerated(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is marked as being in private mode.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onSetPrivate(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is marked as not being in private mode.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemovePrivate(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel is set to be in 'secret' mode.  Such channels
-     * typically do not appear on a server's channel listing.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onSetSecret(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when a channel has 'secret' mode removed.
-     *  <p>
-     * This is a type of mode change and is also passed to the onMode
-     * method in the PircBot class.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param channel The channel in which the mode change took place.
-     * @param sourceNick The nick of the user that performed the mode change.
-     * @param sourceLogin The login of the user that performed the mode change.
-     * @param sourceHostname The hostname of the user that performed the mode change.
-     */
     protected void onRemoveSecret(String channel, String sourceNick, String sourceLogin, String sourceHostname) {}
 
-
-    /**
-     * Called when we are invited to a channel by a user.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @since PircBot 0.9.5
-     *
-     * @param targetNick The nick of the user being invited - should be us!
-     * @param sourceNick The nick of the user that sent the invitation.
-     * @param sourceLogin The login of the user that sent the invitation.
-     * @param sourceHostname The hostname of the user that sent the invitation.
-     * @param channel The channel that we're being invited to.
-     */
     protected void onInvite(String targetNick, String sourceNick, String sourceLogin, String sourceHostname, String channel)  {}
 
-    /**
-     * This method is called whenever we receive a VERSION request.
-     * This abstract implementation responds with the PircBot's _version string,
-     * so if you override this method, be sure to either mimic its functionality
-     * or to call super.onVersion(...);
-     *
-     * @param sourceNick The nick of the user that sent the VERSION request.
-     * @param sourceLogin The login of the user that sent the VERSION request.
-     * @param sourceHostname The hostname of the user that sent the VERSION request.
-     * @param target The target of the VERSION request, be it our nick or a channel name.
-     */
     protected void onVersion(String sourceNick, String sourceLogin, String sourceHostname, String target) {
         this.sendRawLine("NOTICE " + sourceNick + " :\u0001VERSION " + _version + "\u0001");
     }
 
-
-    /**
-     * This method is called whenever we receive a PING request from another
-     * user.
-     *  <p>
-     * This abstract implementation responds correctly, so if you override this
-     * method, be sure to either mimic its functionality or to call
-     * super.onPing(...);
-     *
-     * @param sourceNick The nick of the user that sent the PING request.
-     * @param sourceLogin The login of the user that sent the PING request.
-     * @param sourceHostname The hostname of the user that sent the PING request.
-     * @param target The target of the PING request, be it our nick or a channel name.
-     * @param pingValue The value that was supplied as an argument to the PING command.
-     */
     protected void onPing(String sourceNick, String sourceLogin, String sourceHostname, String target, String pingValue) {
         this.sendRawLine("NOTICE " + sourceNick + " :\u0001PING " + pingValue + "\u0001");
     }
 
-
-    /**
-     * The actions to perform when a PING request comes from the server.
-     *  <p>
-     * This sends back a correct response, so if you override this method,
-     * be sure to either mimic its functionality or to call
-     * super.onServerPing(response);
-     *
-     * @param response The response that should be given back in your PONG.
-     */
     protected void onServerPing(String response) {
         this.sendRawLine("PONG " + response);
     }
 
-
-    /**
-     * This method is called whenever we receive a TIME request.
-     *  <p>
-     * This abstract implementation responds correctly, so if you override this
-     * method, be sure to either mimic its functionality or to call
-     * super.onTime(...);
-     *
-     * @param sourceNick The nick of the user that sent the TIME request.
-     * @param sourceLogin The login of the user that sent the TIME request.
-     * @param sourceHostname The hostname of the user that sent the TIME request.
-     * @param target The target of the TIME request, be it our nick or a channel name.
-     */
     protected void onTime(String sourceNick, String sourceLogin, String sourceHostname, String target) {
         this.sendRawLine("NOTICE " + sourceNick + " :\u0001TIME " + new Date().toString() + "\u0001");
     }
 
-
-    /**
-     * This method is called whenever we receive a FINGER request.
-     *  <p>
-     * This abstract implementation responds correctly, so if you override this
-     * method, be sure to either mimic its functionality or to call
-     * super.onFinger(...);
-     *
-     * @param sourceNick The nick of the user that sent the FINGER request.
-     * @param sourceLogin The login of the user that sent the FINGER request.
-     * @param sourceHostname The hostname of the user that sent the FINGER request.
-     * @param target The target of the FINGER request, be it our nick or a channel name.
-     */
     protected void onFinger(String sourceNick, String sourceLogin, String sourceHostname, String target) {
         this.sendRawLine("NOTICE " + sourceNick + " :\u0001FINGER " + _finger + "\u0001");
     }
 
-
-    /**
-     * This method is called whenever we receive a line from the server that
-     * the PircBot has not been programmed to recognise.
-     *  <p>
-     * The implementation of this method in the PircBot abstract class
-     * performs no actions and may be overridden as required.
-     *
-     * @param line The raw line that was received from the server.
-     */
     protected void onUnknown(String line) {
         // And then there were none :)
     }
 
-    public final User[] getUsersArray(String channel) {
+    protected final void setName(String name) {
+        _name = name;
+    }
+
+    public final void setAliases(Collection<String> aliases) {
+        _aliases.clear();
+        _aliases.addAll(aliases);
+    }
+
+    private final void setNick(String nick) {
+        _nick = nick;
+    }
+
+
+    protected final void setLogin(String login) {
+        _login = login;
+    }
+
+    protected final void setVersion(String version) {
+        _version = version;
+    }
+
+    protected final void setFinger(String finger) {
+        _finger = finger;
+    }
+
+    public final String getName() {
+        return _name;
+    }
+
+    public final List<String> getAliases() {
+        return Collections.unmodifiableList(_aliases);
+    }
+
+    public String getNick() {
+        return _nick;
+    }
+
+    public final String getLogin() {
+        return _login;
+    }
+
+    public final String getVersion() {
+        return _version;
+    }
+
+    public final String getFinger() {
+        return _finger;
+    }
+
+    public final synchronized boolean isConnected() {
+        return _inputThread != null && _inputThread.isConnected();
+    }
+
+    public final synchronized boolean isRegistered()
+    {
+        return _registered;
+    }
+
+    public final void setMessageDelay(long delay) {
+        if (delay < 0) {
+            throw new IllegalArgumentException("Cannot have a negative time.");
+        }
+        _messageDelay = delay;
+    }
+
+    public final long getMessageDelay() {
+        return _messageDelay;
+    }
+
+    public final int getMaxLineLength() {
+        return InputThread.MAX_LINE_LENGTH;
+    }
+
+    public final int getOutgoingQueueSize() {
+        return _outQueue.size();
+    }
+
+    public final String getServer() {
+        return _server;
+    }
+
+    public final int getPort() {
+        return _port;
+    }
+
+    public final String getPassword() {
+        return _password;
+    }
+
+    public int[] longToIp(long address) {
+        int[] ip = new int[4];
+        for (int i = 3; i >= 0; i--) {
+            ip[i] = (int) (address % 256);
+            address = address / 256;
+        }
+        return ip;
+    }
+
+    public long ipToLong(byte[] address) {
+        if (address.length != 4) {
+            throw new IllegalArgumentException("byte array must be of length 4");
+        }
+        long ipNum = 0;
+        long multiplier = 1;
+        for (int i = 3; i >= 0; i--) {
+            int byteVal = (address[i] + 256) % 256;
+            ipNum += byteVal*multiplier;
+            multiplier *= 256;
+        }
+        return ipNum;
+    }
+
+    public void setEncoding(String charset) throws UnsupportedEncodingException {
+        // Just try to see if the charset is supported first...
+        "".getBytes(charset);
+
+        _charset = charset;
+    }
+
+    public String getEncoding() {
+        return _charset;
+    }
+
+    public InetAddress getInetAddress() {
+        return _inetAddress;
+    }
+
+    public void setDccInetAddress(InetAddress dccInetAddress) {
+        _dccInetAddress = dccInetAddress;
+    }
+
+    public InetAddress getDccInetAddress() {
+        return _dccInetAddress;
+    }
+
+    public int[] getDccPorts() {
+        if (_dccPorts == null || _dccPorts.length == 0) {
+            return null;
+        }
+        // Clone the array to prevent external modification.
+        return _dccPorts.clone();
+    }
+
+    public void setDccPorts(int[] ports) {
+        if (ports == null || ports.length == 0) {
+            _dccPorts = null;
+        }
+        else {
+            // Clone the array to prevent external modification.
+            _dccPorts = ports.clone();
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        // This probably has the same effect as Object.equals, but that may change...
+        if (o instanceof IRCProtocol) {
+            IRCProtocol other = (IRCProtocol) o;
+            return other == this;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Version{" + _version + "}" +
+                " Connected{" + isConnected() + "}" +
+                " Server{" + _server + "}" +
+                " Port{" + _port + "}" +
+                " Password{" + _password + "}";
+    }
+
+    public final User[] getUsers(String channel) {
         channel = channel.toLowerCase();
         User[] userArray = new User[0];
         synchronized (_channels) {
@@ -1268,30 +1175,26 @@ public abstract class IRCProtocol {
         return userArray;
     }
 
-    public final void sendMessage(String target, String message) {
-        _outQueue.add("PRIVMSG " + target + " :" + message);
+    public final String[] getChannels() {
+        String[] channels = new String[0];
+        synchronized (_channels) {
+            channels = new String[_channels.size()];
+            Enumeration<String> enumeration = _channels.keys();
+            for (int i = 0; i < channels.length; i++) {
+                channels[i] = enumeration.nextElement();
+            }
+        }
+        return channels;
     }
 
-
-
-    public final List<String> getAliases() {
-        return Collections.unmodifiableList(_aliases);
-    }
-
-    public final String getName() {
-        return _name;
-    }
-
-    public final String getLogin() {
-        return _login;
-    }
-
-    public String getNick() {
-        return _nick;
-    }
-
-    public final String getVersion() {
-        return _version;
+    public synchronized void dispose() {
+        //System.out.println("disposing...");
+        if (_outputThread != null) {
+            _outputThread.interrupt();
+        }
+        if (_inputThread != null) {
+            _inputThread.dispose();
+        }
     }
 
     private final void addUser(String channel, User user) {
@@ -1306,10 +1209,6 @@ public abstract class IRCProtocol {
         }
     }
 
-
-    /**
-     * Remove a user from the specified channel in our memory.
-     */
     private final User removeUser(String channel, String nick) {
         channel = channel.toLowerCase();
         User user = new User("", nick);
@@ -1336,10 +1235,6 @@ public abstract class IRCProtocol {
         }
     }
 
-
-    /**
-     * Rename a user if they appear in any of the channels we know about.
-     */
     private final void renameUser(String oldNick, String newNick) {
         synchronized (_channels) {
             Enumeration<String> enumeration = _channels.keys();
@@ -1354,10 +1249,6 @@ public abstract class IRCProtocol {
         }
     }
 
-
-    /**
-     * Removes an entire channel from our memory of users.
-     */
     private final void removeChannel(String channel) {
         channel = channel.toLowerCase();
         synchronized (_channels) {
@@ -1365,17 +1256,66 @@ public abstract class IRCProtocol {
         }
     }
 
-
-    /**
-     * Removes all channels from our memory of users.
-     */
     private final void removeAllChannels() {
         synchronized(_channels) {
             _channels = new Hashtable<String, Hashtable<User, User>>();
         }
     }
 
-    protected void onPrivateMessage(String sender, String login, String hostname, String target, String message) {}
 
-    protected void onNickChange(String oldNick, String login, String hostname, String newNick) {}
+    private final void updateUser(String channel, int userMode, String nick) {
+        channel = channel.toLowerCase();
+        synchronized (_channels) {
+            Hashtable<User, User> users = _channels.get(channel);
+            User newUser = null;
+            if (users != null) {
+                Enumeration<User> enumeration = users.elements();
+                while(enumeration.hasMoreElements()) {
+                    User userObj = enumeration.nextElement();
+                    if (userObj.getNick().equalsIgnoreCase(nick)) {
+                        if (userMode == OP_ADD) {
+                            if (userObj.hasVoice()) {
+                                newUser = new User("@+", nick);
+                            }
+                            else {
+                                newUser = new User("@", nick);
+                            }
+                        }
+                        else if (userMode == OP_REMOVE) {
+                            if(userObj.hasVoice()) {
+                                newUser = new User("+", nick);
+                            }
+                            else {
+                                newUser = new User("", nick);
+                            }
+                        }
+                        else if (userMode == VOICE_ADD) {
+                            if(userObj.isOp()) {
+                                newUser = new User("@+", nick);
+                            }
+                            else {
+                                newUser = new User("+", nick);
+                            }
+                        }
+                        else if (userMode == VOICE_REMOVE) {
+                            if(userObj.isOp()) {
+                                newUser = new User("@", nick);
+                            }
+                            else {
+                                newUser = new User("", nick);
+                            }
+                        }
+                    }
+                }
+            }
+            if (newUser != null) {
+                users.put(newUser, newUser);
+            }
+            else {
+                // just in case ...
+                newUser = new User("", nick);
+                users.put(newUser, newUser);
+            }
+        }
+    }
 }

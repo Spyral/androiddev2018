@@ -17,11 +17,25 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".activity.AddServerActivity">
+        <activity
+            android:name=".activity.AddServerActivity"
+            android:label="@string/add_server_label">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="irc" />
+            </intent-filter>
         </activity>
-        <activity android:name=".activity.AuthenticationActivity">
+        <activity
+            android:name=".activity.AuthenticationActivity"
+            android:theme="@android:style/Theme.Material.Dialog">
         </activity>
-        <activity android:name=".activity.AddChannelActivity">
+        <activity
+            android:name=".activity.AddChannelActivity"
+            android:theme="@android:style/Theme.Material.Dialog">
         </activity>
         <service android:name=".irc.IRCService">
         </service>

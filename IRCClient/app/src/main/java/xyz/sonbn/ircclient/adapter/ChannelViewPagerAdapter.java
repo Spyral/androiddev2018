@@ -10,39 +10,40 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import io.realm.Realm;
 import xyz.sonbn.ircclient.fragment.ActiveUserFragment;
 import xyz.sonbn.ircclient.fragment.ConversationFragment;
 import xyz.sonbn.ircclient.model.Conversation;
 import xyz.sonbn.ircclient.model.Extra;
+import xyz.sonbn.ircclient.model.Server;
+import xyz.sonbn.ircclient.model.ServerInfo;
 import xyz.sonbn.ircclient.util.AppManager;
 import xyz.sonbn.ircclient.util.ConversationPlaceHolder;
 
 public class ChannelViewPagerAdapter extends FragmentPagerAdapter {
     private final int PAGE_COUNT = 2;
     private String[] title = new String[]{"Conversation", "Active Users"};
-    private Conversation mConversation;
     private ConversationFragment mConversationFragment;
     private ActiveUserFragment mActiveUserFragment;
+    private int serverId;
 
-    public ChannelViewPagerAdapter(FragmentManager fm, int serverId, String channel) {
+    public ChannelViewPagerAdapter(FragmentManager fm, int serverId) {
         super(fm);
-        mConversation = AppManager.getInstance().getConversation(serverId, channel);
 
-        mConversationFragment = new ConversationFragment();
-        Bundle args = new Bundle();
-        args.putInt(Extra.SERVER_ID, mConversation.getServerId());
-        args.putString(Extra.CHANNELS, mConversation.getChannel());
-        mConversationFragment.setArguments(args);
-
-        mActiveUserFragment = new ActiveUserFragment();
+        this.serverId = serverId;
     }
 
     @Override
     public Fragment getItem(int position) {
         switch (position){
             case 0:
+                mConversationFragment = new ConversationFragment();
+                Bundle args = new Bundle();
+                args.putInt(Extra.SERVER_ID, serverId);
+                mConversationFragment.setArguments(args);
                 return mConversationFragment;
             case 1:
+                mActiveUserFragment = new ActiveUserFragment();
                 return mActiveUserFragment;
         }
         return null;

@@ -85,24 +85,4 @@ public class AppManager {
 
         return channels;
     }
-
-    public Conversation addConversation(int serverId, String channel){
-        Conversation conversation = new Conversation(serverId, channel);
-        mConversations.add(conversation);
-        return conversation;
-    }
-
-    public Conversation getConversation(int serverId, String channel){
-        Conversation result = null;
-        for (Conversation conversation: mConversations){
-            if (conversation.getServerId() == serverId && conversation.getChannel() == channel){
-                result = conversation;
-                return result;
-            }
-        }
-        if (result == null){
-            return addConversation(serverId, channel);
-        }
-        return result;
-    }
 }

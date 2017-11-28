@@ -1,10 +1,15 @@
 package xyz.sonbn.ircclient.model;
 
-import java.util.ArrayList;
+import android.content.pm.ServiceInfo;
 
-import io.realm.Realm;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
@@ -21,23 +26,28 @@ public class Server extends RealmObject {
 
     private int port;
 
+    //For identity
     @Required
     private String nickname;
 
     @Required
-    private RealmList<String> channels;
-
-    @Required
     private String realname;
 
-    private int status;
+    @Required
+    private RealmList<String> autoJoinChannels;
 
-    // To do: Authenication
+    private int status = Status.DISCONNECTED;
+
+    @Ignore
+    private String selected = "";
+
+    @Ignore
+    private LinkedHashMap<String, Conversation> conversations = new LinkedHashMap<>();
 
 
     public Server() {
-        port = 6667;
-        status = Status.DISCONNECTED;
+        conversations.put(ServerInfo.DEFAULT_NAME, new ServerInfo());
+        selected = ServerInfo.DEFAULT_NAME;
     }
 
     public int getId() {
@@ -80,22 +90,6 @@ public class Server extends RealmObject {
         this.nickname = nickname;
     }
 
-    public RealmList<String> getChannels() {
-        return channels;
-    }
-
-    public ArrayList<String> getChannelsInArrayList(){
-        ArrayList<String> arrayListChannels = new ArrayList<>();
-        for (String channel: channels) {
-            arrayListChannels.add(channel);
-        }
-        return arrayListChannels;
-    }
-
-    public void setChannels(RealmList<String> channels) {
-        this.channels = channels;
-    }
-
     public String getRealname() {
         return realname;
     }
@@ -104,11 +98,87 @@ public class Server extends RealmObject {
         this.realname = realname;
     }
 
+    public ArrayList<String> getAutoJoinChannels() {
+        ArrayList<String> result = new ArrayList<>();
+        for (String channel: this.autoJoinChannels){
+            result.add(channel);
+        }
+        return result;
+    }
+
+    public void setAutoJoinChannels(ArrayList<String> autoJoinChannels) {
+        this.autoJoinChannels = new RealmList<>();
+        for (String channel: autoJoinChannels){
+            this.autoJoinChannels.add(channel);
+        }
+    }
+
     public int getStatus() {
         return status;
     }
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public boolean isDisconnected()
+    {
+        return status == Status.DISCONNECTED;
+    }
+
+    public boolean isConnected()
+    {
+        return status == Status.CONNECTED;
+    }
+
+    public String getSelectedConversation()
+    {
+        return selected;
+    }
+
+    public void setSelectedConversation(String selected)
+    {
+        this.selected = selected;
+    }
+
+    public Collection<Conversation> getConversations() {
+        return conversations.values();
+    }
+
+    public Conversation getConversation(String name){
+        return conversations.get(name.toLowerCase());
+    }
+
+    public void addConversation(Conversation conversation)
+    {
+        conversations.put(conversation.getName().toLowerCase(), conversation);
+    }
+
+    public void removeConversation(String name)
+    {
+        conversations.remove(name.toLowerCase());
+    }
+
+    public void clearConversations()
+    {
+        conversations.clear();
+
+        // reset defaults
+        conversations.put(ServerInfo.DEFAULT_NAME, new ServerInfo());
+        this.selected = ServerInfo.DEFAULT_NAME;
+    }
+
+    public ArrayList<String> getCurrentChannelNames()
+    {
+        ArrayList<String> channels = new ArrayList<String>();
+        Collection<Conversation> mConversations = conversations.values();
+
+        for (Conversation conversation : mConversations) {
+            if (conversation.getType() == Conversation.TYPE_CHANNEL) {
+                channels.add(conversation.getName());
+            }
+        }
+
+        return channels;
     }
 }

@@ -96,10 +96,10 @@
                 android:text="@string/authentication" />
 
             <Button
-                android:id="@+id/channels"
+                android:id="@+id/autoJoinChannels"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/channels" />
+                android:text="@string/autoJoinChannels" />
 
         </LinearLayout>
     </ScrollView>

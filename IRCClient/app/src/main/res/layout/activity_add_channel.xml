@@ -10,7 +10,7 @@
         android:text="@string/channel_add_description"
         android:padding="5dp" />
     <ListView
-        android:id="@+id/channels"
+        android:id="@+id/autoJoinChannels"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" />
     <LinearLayout

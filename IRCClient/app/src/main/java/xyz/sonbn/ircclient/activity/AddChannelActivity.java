@@ -36,7 +36,7 @@ public class AddChannelActivity extends Activity implements View.OnClickListener
 
         mAdapter = new ArrayAdapter<String>(this, R.layout.channelitem);
 
-        ListView listView = (ListView) findViewById(R.id.channels);
+        ListView listView = (ListView) findViewById(R.id.autoJoinChannels);
         listView.setAdapter(mAdapter);
 
         ((Button) findViewById(R.id.add)).setOnClickListener(this);

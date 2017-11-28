@@ -5,4 +5,5 @@ package xyz.sonbn.ircclient.listener;
  */
 
 public interface ServerListener {
+    void onStatusUpdate();
 }

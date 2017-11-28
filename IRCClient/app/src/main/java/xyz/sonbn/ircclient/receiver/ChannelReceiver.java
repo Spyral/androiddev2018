@@ -3,6 +3,7 @@ package xyz.sonbn.ircclient.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import xyz.sonbn.ircclient.listener.ChannelListener;
 import xyz.sonbn.ircclient.model.Broadcast;
@@ -21,6 +22,7 @@ public class ChannelReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         int serverId = intent.getExtras().getInt(Extra.SERVER_ID);
 
+        Log.d("Channelreceiver", "Received");
         if (serverId != mServerId){
             return;
         }

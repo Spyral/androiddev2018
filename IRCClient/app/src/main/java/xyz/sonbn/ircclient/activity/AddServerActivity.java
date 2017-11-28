@@ -1,6 +1,7 @@
 package xyz.sonbn.ircclient.activity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -47,7 +48,7 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
         realname = (EditText) findViewById(R.id.real_name);
 
         ((Button) findViewById(R.id.authentication)).setOnClickListener(this);
-        ((Button) findViewById(R.id.channels)).setOnClickListener(this);
+        ((Button) findViewById(R.id.autoJoinChannels)).setOnClickListener(this);
 
         mRealm = Realm.getDefaultInstance();
 
@@ -55,8 +56,8 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
         //check add server or update
         if (extras != null && extras.containsKey(Extra.SERVER)){
             setTitle(R.string.edit_server_label);
-            mServer = AppManager.getInstance().getServerById(extras.getInt(Extra.SERVER_ID));
-            channels = mServer.getChannelsInArrayList();
+            mServer = mRealm.where(Server.class).equalTo("id", extras.getInt(Extra.SERVER)).findFirst();
+            channels = mServer.getAutoJoinChannels();
 
             //Set server value
             title.setText(mServer.getTitle());
@@ -64,6 +65,25 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
             port.setText(mServer.getPort());
             nickname.setText(mServer.getNickname());
             realname.setText(mServer.getRealname());
+        }
+
+        // Disable suggestions for host name
+        if (android.os.Build.VERSION.SDK_INT >= 5) {
+            EditText serverHostname = (EditText) findViewById(R.id.host);
+            serverHostname.setInputType(0x80000);
+        }
+
+        Uri uri = getIntent().getData();
+        if (uri != null && uri.getScheme().equals("irc")) {
+            // handling an irc:// uri
+
+            ((EditText) findViewById(R.id.host)).setText(uri.getHost());
+            if (uri.getPort() != -1) {
+                ((EditText) findViewById(R.id.port)).setText(String.valueOf(uri.getPort()));
+            }
+            if (uri.getPath() != null) {
+                channels.add(uri.getPath().replace('/', '#'));
+            }
         }
     }
 
@@ -74,7 +94,7 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
                 Intent authIntent = new Intent(this, AuthenticationActivity.class);
                 startActivityForResult(authIntent, REQUEST_CODE_AUTHENTICATION);
                 break;
-            case R.id.channels:
+            case R.id.autoJoinChannels:
                 Intent channelIntent = new Intent(this, AddChannelActivity.class);
                 channelIntent.putExtra(Extra.CHANNELS, channels);
                 startActivityForResult(channelIntent, REQUEST_CODE_CHANNELS);
@@ -135,11 +155,7 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
                 if (channels.size() == 0){
                     channels.add("#General");
                 }
-                RealmList<String> defaultChannel = new RealmList<>();
-                for (String channel: channels){
-                    defaultChannel.add(channel);
-                }
-                mServer.setChannels(defaultChannel);
+                mServer.setAutoJoinChannels(channels);
 
                 mRealm.insertOrUpdate(mServer);
             }
@@ -166,12 +182,10 @@ public class AddServerActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void validateServer(){
-        String title = ((EditText) findViewById(R.id.title)).getText().toString();
-
-        if (mRealm.where(Server.class).equalTo("title", title).findAll().size() == 0){
+        if (mRealm.where(Server.class).equalTo("title", title.getText().toString()).findAll().size() == 0){
             mServer = null;
         } else {
-            mServer = mRealm.where(Server.class).equalTo("title", title).findFirst();
+            mServer = mRealm.where(Server.class).equalTo("title", title.getText().toString()).findFirst();
         }
     }
 }

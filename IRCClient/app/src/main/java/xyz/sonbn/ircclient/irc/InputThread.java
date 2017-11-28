@@ -14,6 +14,8 @@ found at http://www.jibble.org/licenses/
 
 package xyz.sonbn.ircclient.irc;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InterruptedIOException;
@@ -82,6 +84,8 @@ public class InputThread extends Thread {
                     String line = null;
                     while ((line = _breader.readLine()) != null) {
                         try {
+                            Log.d("Input thread", line);
+                            _bot.handleLine(line);
                         }
                         catch (Throwable t) {
                             // Stick the whole stack trace into a String so we can output it nicely.
