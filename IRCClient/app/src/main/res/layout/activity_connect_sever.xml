@@ -25,13 +25,13 @@
             android:textSize="@dimen/title_size"/>
 
         <EditText
-            android:id="@+id/username"
+            android:id="@+id/username_box"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="viewStart"
             android:backgroundTint="@color/colorAccent"
             android:textColor="@color/colorWhite"
-            android:textSize="@dimen/text_field_size"
+            android:textSize="@dimen/chat_text_size"
             android:inputType="textAutoCorrect"
             android:maxLines="1"/>
 
@@ -49,7 +49,7 @@
             android:textAlignment="viewStart"
             android:backgroundTint="@color/colorAccent"
             android:textColor="@color/colorWhite"
-            android:textSize="@dimen/text_field_size"
+            android:textSize="@dimen/chat_text_size"
             android:inputType="textAutoCorrect"
             android:maxLines="1"/>
 
@@ -67,7 +67,7 @@
             android:textAlignment="viewStart"
             android:backgroundTint="@color/colorAccent"
             android:textColor="@color/colorWhite"
-            android:textSize="@dimen/text_field_size"
+            android:textSize="@dimen/chat_text_size"
             android:inputType="textAutoCorrect"
             android:maxLines="1"/>
 
@@ -86,7 +86,7 @@
             android:textAlignment="viewStart"
             android:backgroundTint="@color/colorAccent"
             android:textColor="@color/colorWhite"
-            android:textSize="@dimen/text_field_size"
+            android:textSize="@dimen/chat_text_size"
             android:inputType="number"
             android:maxLines="1"/>
 

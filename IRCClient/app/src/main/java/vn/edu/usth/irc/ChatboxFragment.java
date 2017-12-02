@@ -19,10 +19,10 @@ import java.util.List;
 
 public class ChatboxFragment extends Fragment{
 
-    private static RecyclerView mRecyclerView;
+    private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
-    private static RecyclerView.Adapter mAdapter;
-    private static List<Chat> chatList = new ArrayList<>();
+    private RecyclerView.Adapter mAdapter;
+    private ArrayList<Chat> chat = new ArrayList<>();
 
     @Nullable
     @Override
@@ -31,23 +31,19 @@ public class ChatboxFragment extends Fragment{
         View view = inflater.inflate(R.layout.fragment_chatbox, container, false);
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.chatbox);
-        mLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        mLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mAdapter = new ChatboxAdapter(chatList);
+        mAdapter = new ChatboxAdapter(chat);
         mRecyclerView.setAdapter(mAdapter);
 
         return view;
     }
 
-    public static void updateChat(String user, String content) {
-        Chat chat = new Chat(user, content);
-        chatList.add(chat);
+    private void prepareChat() {
+        // TODO: get the data from the server and set it here
 
         mAdapter.notifyDataSetChanged();
-
-        // Scroll to bottom
-        mRecyclerView.smoothScrollToPosition(mRecyclerView.getAdapter().getItemCount() - 1);
     }
 
     public class ChatboxAdapter extends RecyclerView.Adapter<ChatboxAdapter.MyViewHolder> {
@@ -78,9 +74,7 @@ public class ChatboxFragment extends Fragment{
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
             Chat chat = chatList.get(position);
-
-            String usernameParse = "<" + chat.getUser() + ">:";
-            holder.chat_user.setText(usernameParse);
+            holder.chat_user.setText(chat.getUser());
             holder.chat_content.setText(chat.getContent());
         }
 
