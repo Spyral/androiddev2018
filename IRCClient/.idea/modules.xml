@@ -3,9 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/IRCClient.iml" filepath="$PROJECT_DIR$/IRCClient.iml" />
-      <module fileurl="file://C:\Users\KingK\Desktop\androiddev2018-vhlinh-master\IRCClient\IRCClient.iml" filepath="C:\Users\KingK\Desktop\androiddev2018-vhlinh-master\IRCClient\IRCClient.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\KingK\Desktop\androiddev2018-vhlinh-master\IRCClient\app\app.iml" filepath="C:\Users\KingK\Desktop\androiddev2018-vhlinh-master\IRCClient\app\app.iml" />
     </modules>
   </component>
 </project>
