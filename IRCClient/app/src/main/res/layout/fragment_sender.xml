@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sender"
+    android:background="@color/colorPrimary"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="bottom"
+    android:orientation="horizontal"
+    android:paddingBottom="5dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <EditText
+        android:id="@+id/sender_box"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="6"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="5dp"
+        android:textAlignment="viewStart"
+        android:backgroundTint="@color/colorAccent"
+        android:textColor="@color/colorWhite"
+        android:textSize="@dimen/text_field_size"
+        android:inputType="textMultiLine|textAutoCorrect"
+        android:maxLines="3"/>
+
+    <ImageButton
+        android:id="@+id/send_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@mipmap/ic_send_white_36dp"
+        android:tint="@color/colorAccent"
+        android:background="@android:color/transparent" />
+
+</LinearLayout>
+

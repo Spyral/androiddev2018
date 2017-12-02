@@ -1,0 +1,106 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/colorPrimaryDark"
+    tools:context=".AppCompatPreferenceActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/user_name"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/text_field_size"
+            android:inputType="textAutoCorrect"
+            android:maxLines="1"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/real_name"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/real_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/text_field_size"
+            android:inputType="textAutoCorrect"
+            android:maxLines="1"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/host_name"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/host_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/text_field_size"
+            android:inputType="textAutoCorrect"
+            android:maxLines="1"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/port"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/title_size"/>
+
+        <EditText
+            android:id="@+id/port"
+            android:text="@string/default_port"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="viewStart"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@color/colorWhite"
+            android:textSize="@dimen/text_field_size"
+            android:inputType="number"
+            android:maxLines="1"/>
+
+        <Button
+            android:id="@+id/connect_button"
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/action_connect"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimaryDark"
+            android:onClick="connect"/>
+
+    </LinearLayout>
+
+</LinearLayout>
