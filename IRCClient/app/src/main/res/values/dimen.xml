@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--text size of chatbox-->
-    <dimen name="chat_text_size">12sp</dimen>
+    <dimen name="chat_text_size">15sp</dimen>
     <!--connect section size-->
     <dimen name="title_size">15sp</dimen>
     <dimen name="title_padding">10dp</dimen>
