@@ -11,7 +11,6 @@ import android.widget.EditText;
 
 public class ConnectServerActivity extends AppCompatActivity {
 
-    public static User user;
     public EditText userName;
     public EditText realName;
 
@@ -25,7 +24,8 @@ public class ConnectServerActivity extends AppCompatActivity {
     }
 
     public void connect (View view){
-        setupUserInfo();
+        Ultils.setupUserInfo(userName.getText().toString(), realName.getText().toString());
+
         Intent i = new Intent(this, MainActivity.class);
         startActivity(i);
 //        Function to check connection to the server
@@ -54,10 +54,6 @@ public class ConnectServerActivity extends AppCompatActivity {
             finish();
         }
         super.onBackPressed();
-    }
-
-    private void setupUserInfo() {
-        user = new User(userName.getText().toString(), realName.getText().toString());
     }
 }
 

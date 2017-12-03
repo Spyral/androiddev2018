@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ActionBarDrawerToggle mToggle;
     private NavigationView navView;
     public TabLayout tabLayout;
-    private int pageLimit = 3;
+    private int pageLimit = 2;
 
     public SharedPreferences preferences;
     public boolean ranBefore;

@@ -40,12 +40,12 @@ public class SenderFragment extends Fragment {
     }
 
     private void sendMessage() {
-        ConnectServerActivity.user.setMessage(input.getText().toString());
-        ChatboxFragment.updateChat(ConnectServerActivity.user.getUsername(), ConnectServerActivity.user.getMessage());
+        Ultils.user.setMessage(input.getText().toString());
+        ChatboxFragment.updateChat(Ultils.user.getUsername(), Ultils.user.getMessage());
+        input.setText("");
     }
 
     private void hideKeyboard() {
-        input.setText("");
         View view = getActivity().getCurrentFocus();
         if (view != null) {
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
