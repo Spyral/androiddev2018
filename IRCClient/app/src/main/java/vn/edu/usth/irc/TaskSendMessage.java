@@ -6,9 +6,11 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -37,25 +39,39 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
         URL url = null;
 
         try {
-            url = new URL("http://192.168.1.43/ChatApp/chat/send/Tom/1/hello");
+            url = new URL("http://192.168.1.43/ChatApp/chat/send/");
 
             JSONObject postMessageJson = new JSONObject();
-            postMessageJson.put("sender", Utils.user.getUsername());
-            postMessageJson.put("channel", Utils.user.getChannel());
-            postMessageJson.put("message", Utils.user.getMessage());
+            postMessageJson.put("sender", "minhlp");
+            postMessageJson.put("channel", "someone");
+            postMessageJson.put("message", "hello world");
 
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(15000);
-            conn.setConnectTimeout(15000);
+//            conn.connect();
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setDoInput(true);
-
+            conn.connect();
             DataOutputStream localDataOutputStream = new DataOutputStream(conn.getOutputStream());
             localDataOutputStream.writeBytes(URLEncoder.encode(postMessageJson.toString(),"UTF-8"));
             localDataOutputStream.flush();
             localDataOutputStream.close();
+            InputStream in = new BufferedInputStream(conn.getInputStream());
+//            readStream(in);
+
+
+//            conn.setReadTimeout(15000);
+//            conn.setConnectTimeout(15000);
+//            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+//            conn.setRequestMethod("POST");
+//            conn.setDoOutput(true);
+//            conn.setDoInput(true);
+//
+//            DataOutputStream localDataOutputStream = new DataOutputStream(conn.getOutputStream());
+//            localDataOutputStream.writeBytes(URLEncoder.encode(postMessageJson.toString(),"UTF-8"));
+//            localDataOutputStream.flush();
+//            localDataOutputStream.close();
 
         } catch (Exception e) {
             e.printStackTrace();
