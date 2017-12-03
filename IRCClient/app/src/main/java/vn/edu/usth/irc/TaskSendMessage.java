@@ -24,6 +24,7 @@ import static java.lang.Integer.parseInt;
  */
 
 public class TaskSendMessage extends AsyncTask<String, Void, String> {
+    private HttpURLConnection conn = null;
 
     @Override
     protected void onPreExecute() {
@@ -34,11 +35,9 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... strings) {
 
         try {
-            URL url = new URL("http://192.168.1.110/ChatApp/chat/send/");
-
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            URL url = new URL(Utils.ipAddress + "ChatApp/chat/send/");
+            conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
-            conn.setDoInput(true);
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             conn.setRequestMethod("POST");
 
@@ -59,9 +58,9 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
 
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            conn.disconnect();
         }
-
-
         return "";
     }
 

@@ -1,6 +1,7 @@
 package vn.edu.usth.irc;
 
 import android.content.Context;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -15,18 +16,17 @@ import org.json.JSONObject;
  * Created by Local Boy on 12/3/2017.
  */
 
-public class TaskGetMessage {
+public class TaskCheckNewMess {
     private Context context;
     private String channel;
 
-    public TaskGetMessage(Context context, String channel) {
+    public TaskCheckNewMess(Context context, String channel) {
         this.context = context;
         this.channel = channel;
     }
 
-    public void fetchMessage() {
-        String targetId = Integer.toString(Utils.getNewestMessIdLocal());
-        String url = Utils.ipAddress + "ChatApp/chat/receive/" + channel + "/" + targetId;
+    public void fetchNewMessID() {
+        String url = Utils.ipAddress + "ChatApp/chat/check_mess/" + channel;
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
@@ -34,16 +34,21 @@ public class TaskGetMessage {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            JSONArray received = response.getJSONArray("received");
+                            JSONArray check = response.getJSONArray("check");
 
-                            for (int i = 1; i < received.length(); i++) {
-                                JSONObject chat = received.getJSONObject(i);
-                                String sender = chat.getString("Sender");
-                                String message = chat.getString("Message");
-                                ChatboxFragment.updateChat(sender, message);
+                            for (int i=0; i < check.length(); i++) {
+                                JSONObject idArray = check.getJSONObject(i);
+                                String newId = idArray.getString("MAX(ID)");
+                                Utils.setNewestMessIdServer(Integer.parseInt(newId));
+                                Toast.makeText(context, newId, Toast.LENGTH_LONG).show();
                             }
 
-                            Utils.setNewestMessIdLocal(Utils.getNewestMessIdServer());
+                            // Fetch new message ONLY after new message check has done.
+                            if (Utils.getNewestMessIdServer() > Utils.getNewestMessIdLocal()) {
+                                new TaskGetMessage(context, channel).fetchMessage();
+                            } else {
+                                return;
+                            }
 
                         } catch (JSONException e) {
                             e.printStackTrace();
