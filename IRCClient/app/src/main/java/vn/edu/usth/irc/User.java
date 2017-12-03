@@ -5,11 +5,10 @@ package vn.edu.usth.irc;
  */
 
 public class User {
-    private String username, realname, message;
+    private String username, channel = "1", message;
 
-    public User(String username, String realname) {
+    public User(String username) {
         this.username = username;
-        this.realname = realname;
     }
 
     public String getUsername() {
@@ -20,12 +19,12 @@ public class User {
         this.username = username;
     }
 
-    public String getRealname() {
-        return realname;
+    public String getChannel() {
+        return channel;
     }
 
-    public void setRealname(String realname) {
-        this.realname = realname;
+    public void setChannel(String channel) {
+        this.channel = channel;
     }
 
     public String getMessage() {

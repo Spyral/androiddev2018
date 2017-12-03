@@ -1,7 +1,6 @@
 package vn.edu.usth.irc;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -40,8 +39,9 @@ public class SenderFragment extends Fragment {
     }
 
     private void sendMessage() {
-        Ultils.user.setMessage(input.getText().toString());
-        ChatboxFragment.updateChat(Ultils.user.getUsername(), Ultils.user.getMessage());
+        Utils.user.setMessage(input.getText().toString());
+        ChatboxFragment.updateChat(Utils.user.getUsername(), Utils.user.getMessage());
+        new TaskSendMessage().execute();
         input.setText("");
     }
 

@@ -24,7 +24,7 @@ public class ConnectServerActivity extends AppCompatActivity {
     }
 
     public void connect (View view){
-        Ultils.setupUserInfo(userName.getText().toString(), realName.getText().toString());
+        Utils.setupUserInfo(userName.getText().toString());
 
         Intent i = new Intent(this, MainActivity.class);
         startActivity(i);
