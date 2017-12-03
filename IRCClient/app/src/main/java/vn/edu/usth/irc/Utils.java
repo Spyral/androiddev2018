@@ -5,6 +5,9 @@ package vn.edu.usth.irc;
  */
 
 public final class Utils {
+    public static String ipAddress = "http://192.168.100.2/";
+    private static int newestMessIdLocal = 48;
+    private static int newestMessIdServer;
     public static User user;
 
     public static void setupUserInfo(String username) {
@@ -13,5 +16,21 @@ public final class Utils {
         } else {
             user.setUsername(username);
         }
+    }
+
+    public static int getNewestMessIdLocal() {
+        return newestMessIdLocal;
+    }
+
+    public static void setNewestMessIdLocal(int newestMessIdLocal) {
+        Utils.newestMessIdLocal = newestMessIdLocal;
+    }
+
+    public static int getNewestMessIdServer() {
+        return newestMessIdServer;
+    }
+
+    public static void setNewestMessIdServer(int newestMessIdServer) {
+        Utils.newestMessIdServer = newestMessIdServer;
     }
 }
