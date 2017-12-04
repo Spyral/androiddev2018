@@ -63,7 +63,7 @@ public class ConnectServerActivity extends AppCompatActivity {
             @Override
             protected String doInBackground(String... strings) {
                 try {
-                    URL url = new URL("http://192.168.1.110/ChatApp/chat/check_sender/");
+                    URL url = new URL("http://"+Utils.ipAddress+"/ChatApp/chat/check_sender/");
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setDoOutput(true);

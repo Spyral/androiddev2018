@@ -35,7 +35,7 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... strings) {
 
         try {
-            URL url = new URL(Utils.ipAddress + "ChatApp/chat/send/");
+            URL url = new URL("http://"+Utils.ipAddress + "/ChatApp/chat/send/");
             conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
