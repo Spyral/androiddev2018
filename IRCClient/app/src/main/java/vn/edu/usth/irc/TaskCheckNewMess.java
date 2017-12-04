@@ -1,6 +1,7 @@
 package vn.edu.usth.irc;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -43,10 +44,11 @@ public class TaskCheckNewMess {
                                 String newId = idArray.getString("MAX(ID)");
                                 Utils.setNewestMessIdServer(parseInt(newId));
                             }
-
+                            Log.i("Local ID", String.valueOf(Utils.getNewestMessIdLocal()));
                             // Fetch new message ONLY after new message check has done.
                             if (Utils.getNewestMessIdServer() > Utils.getNewestMessIdLocal()) {
                                 new TaskGetMessage(context, channel).fetchMessage();
+                                Log.i("get mess", "got");
                             }
 
                         } catch (JSONException e) {

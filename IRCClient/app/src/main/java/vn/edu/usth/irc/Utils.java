@@ -5,7 +5,7 @@ package vn.edu.usth.irc;
  */
 
 public final class Utils {
-    public static String ipAddress = "192.168.208.109";
+    public static String ipAddress;
     private static int newestMessIdLocal = 63;
     private static int newestMessIdServer;
     public static User user;

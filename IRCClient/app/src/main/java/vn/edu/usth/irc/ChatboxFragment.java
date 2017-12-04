@@ -55,6 +55,11 @@ public class ChatboxFragment extends Fragment{
         mRecyclerView.smoothScrollToPosition(mRecyclerView.getAdapter().getItemCount() - 1);
     }
 
+    public static void clearChat() {
+        mRecyclerView.removeAllViewsInLayout();
+        chatList.clear();
+    }
+
     public class ChatboxAdapter extends RecyclerView.Adapter<ChatboxAdapter.MyViewHolder> {
         private List<Chat> chatList;
 

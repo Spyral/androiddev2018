@@ -39,25 +39,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/real_name"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/title_size"/>
-
-        <EditText
-            android:id="@+id/real_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="viewStart"
-            android:backgroundTint="@color/colorAccent"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/text_field_size"
-            android:inputType="textAutoCorrect"
-            android:maxLines="1"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/host_name"
+            android:text="@string/host_address"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/title_size"/>
 

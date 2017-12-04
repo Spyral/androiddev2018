@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.icu.util.ULocale;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.NavigationView;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationView navView;
     public TabLayout tabLayout;
     private int pageLimit = 2;
+    private String prev_channel;
 
     private Handler h = new Handler();
     private int delay = 2000; //2 seconds
@@ -122,8 +124,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(MenuItem item) {
         if (item.getItemId() != R.id.create_channel) {
             selectCurrentChannel(item);
+
+            if (!item.getTitle().toString().equals(prev_channel)) {
+                onNavigationItemChange();
+            }
+
+            prev_channel = (String) item.getTitle();
         }
         return true;
+    }
+
+    public void onNavigationItemChange() {
+        ChatboxFragment.clearChat();
     }
 
     private void addNewChannelInNavDrawer(String newChannelName) {
@@ -150,9 +162,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                String newChannelName = editText.getText().toString();
+                String newChannelName = "";
+                newChannelName = editText.getText().toString();
                 addNewChannelInNavDrawer(newChannelName);
                 dialog.dismiss();
+                Utils.user.setMessage("New channel created!");
+                new TaskSendMessage(getApplicationContext()).execute();
             }
         });
 

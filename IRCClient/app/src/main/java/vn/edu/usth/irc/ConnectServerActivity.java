@@ -25,7 +25,7 @@ import static java.lang.Integer.parseInt;
 public class ConnectServerActivity extends AppCompatActivity {
 
     public EditText userName;
-    public EditText realName;
+    public EditText hostAddress;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,12 +33,13 @@ public class ConnectServerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_connect_sever);
 
         userName = (EditText) findViewById(R.id.username);
-        realName = (EditText) findViewById(R.id.real_name);
+        hostAddress = (EditText) findViewById(R.id.host);
     }
 
     public void connect (View view){
         //        String sender = userName.getText().toString();
         Utils.setupUserInfo(userName.getText().toString());
+        Utils.ipAddress = hostAddress.getText().toString();
         checkUsername();
         Log.i("username", Utils.user.getUsername());
     }
