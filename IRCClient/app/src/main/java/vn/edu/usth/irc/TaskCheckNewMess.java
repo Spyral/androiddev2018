@@ -26,7 +26,7 @@ public class TaskCheckNewMess {
     }
 
     public void fetchNewMessID() {
-        String url = Utils.ipAddress + "ChatApp/chat/check_mess/" + channel;
+        String url = "http://"+Utils.ipAddress+"ChatApp/chat/check_mess/" + channel;
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.POST, url, null, new Response.Listener<JSONObject>() {

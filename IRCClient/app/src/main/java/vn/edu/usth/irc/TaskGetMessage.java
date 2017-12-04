@@ -26,7 +26,7 @@ public class TaskGetMessage {
 
     public void fetchMessage() {
         String targetId = Integer.toString(Utils.getNewestMessIdLocal());
-        String url = Utils.ipAddress + "ChatApp/chat/receive/" + channel + "/" + targetId;
+        String url = "http://"+Utils.ipAddress+"ChatApp/chat/receive/" + channel + "/" + targetId;
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
