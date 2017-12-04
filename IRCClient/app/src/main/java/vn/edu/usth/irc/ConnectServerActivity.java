@@ -60,12 +60,14 @@ public class ConnectServerActivity extends AppCompatActivity {
 
     public void checkUsername () {
         AsyncTask<String, Void, String> task = new AsyncTask<String, Void, String>() {
+            HttpURLConnection conn;
             @Override
             protected String doInBackground(String... strings) {
                 try {
                     URL url = new URL("http://"+Utils.ipAddress+"/ChatApp/chat/check_sender/");
 
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn = (HttpURLConnection) url.openConnection();
+
                     conn.setDoOutput(true);
                     conn.setDoInput(true);
                     conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -86,6 +88,9 @@ public class ConnectServerActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     e.printStackTrace();
 
+                }
+                finally {
+                    conn.disconnect();
                 }
                 return "";
             }

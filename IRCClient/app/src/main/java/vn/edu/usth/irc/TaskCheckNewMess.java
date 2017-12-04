@@ -12,6 +12,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static java.lang.Integer.parseInt;
+
 /**
  * Created by Local Boy on 12/3/2017.
  */
@@ -26,7 +28,7 @@ public class TaskCheckNewMess {
     }
 
     public void fetchNewMessID() {
-        String url = "http://"+Utils.ipAddress+"ChatApp/chat/check_mess/" + channel;
+        String url = "http://"+Utils.ipAddress+"/ChatApp/chat/check_mess/" + Utils.user.getChannel();
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
@@ -39,7 +41,7 @@ public class TaskCheckNewMess {
                             for (int i=0; i < check.length(); i++) {
                                 JSONObject idArray = check.getJSONObject(i);
                                 String newId = idArray.getString("MAX(ID)");
-                                Utils.setNewestMessIdServer(Integer.parseInt(newId));
+                                Utils.setNewestMessIdServer(parseInt(newId));
                             }
 
                             // Fetch new message ONLY after new message check has done.

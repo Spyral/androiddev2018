@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -32,6 +33,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationView navView;
     public TabLayout tabLayout;
     private int pageLimit = 2;
+
+    private Handler h = new Handler();
+    private int delay = 2000; //2 seconds
+    private Runnable runnable;
 
     public SharedPreferences preferences;
     public boolean ranBefore;
@@ -78,9 +83,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         RequestQueue queue = VolleySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
     }
 
+    //start handler as activity become visible
+    @Override
+    protected void onResume() {
+        h.postDelayed(new Runnable() {
+            public void run() {
+                // do something
+                new TaskCheckNewMess(getApplicationContext(), Utils.user.getChannel()).fetchNewMessID();
+
+                runnable = this;
+                h.postDelayed(runnable, delay);
+            }
+        }, delay);
+
+        super.onResume();
+    }
+
+    //stop handler when activity not visible
+    @Override
+    protected void onPause() {
+        h.removeCallbacks(runnable);
+        super.onPause();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         if(mToggle.onOptionsItemSelected(item)) {
             return true;
         }
@@ -106,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void selectCurrentChannel(MenuItem item) {
+        Utils.user.setChannel((String) item.getTitle());
         item.setCheckable(true);
         item.setChecked(true);
         mDrawerLayout.closeDrawers();

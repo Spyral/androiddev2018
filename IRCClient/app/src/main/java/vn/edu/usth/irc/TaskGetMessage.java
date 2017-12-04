@@ -1,6 +1,7 @@
 package vn.edu.usth.irc;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -26,13 +27,15 @@ public class TaskGetMessage {
 
     public void fetchMessage() {
         String targetId = Integer.toString(Utils.getNewestMessIdLocal());
-        String url = "http://"+Utils.ipAddress+"ChatApp/chat/receive/" + channel + "/" + targetId;
+        Log.i("fetch mess", targetId);
+        String url = "http://"+Utils.ipAddress+"/ChatApp/chat/receive/" + channel + "/" + targetId;
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
                 (Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
+                        Log.i("getmessagerespond", "adgdagagd");
                         try {
                             JSONArray received = response.getJSONArray("received");
 
@@ -40,6 +43,7 @@ public class TaskGetMessage {
                                 JSONObject chat = received.getJSONObject(i);
                                 String sender = chat.getString("Sender");
                                 String message = chat.getString("Message");
+                                message = message.replace("%20", " ");
                                 ChatboxFragment.updateChat(sender, message);
                             }
 

@@ -33,6 +33,7 @@
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/text_field_size"
             android:inputType="textAutoCorrect"
+            android:maxLength="15"
             android:maxLines="1"/>
 
         <TextView

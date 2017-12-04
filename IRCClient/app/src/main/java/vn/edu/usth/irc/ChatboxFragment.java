@@ -25,6 +25,7 @@ public class ChatboxFragment extends Fragment{
     private static RecyclerView.Adapter mAdapter;
     private static List<Chat> chatList = new ArrayList<>();
 
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -38,10 +39,11 @@ public class ChatboxFragment extends Fragment{
         mAdapter = new ChatboxAdapter(chatList);
         mRecyclerView.setAdapter(mAdapter);
 
-        new TaskCheckNewMess(getContext(), Utils.user.getChannel()).fetchNewMessID();
+//        new TaskCheckNewMess(getContext(), Utils.user.getChannel()).fetchNewMessID();
 
         return view;
     }
+
 
     public static void updateChat(String user, String content) {
         Chat chat = new Chat(user, content);
@@ -81,11 +83,10 @@ public class ChatboxFragment extends Fragment{
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
             String username = "";
-            Chat current_chat;
+            Chat current_chat = chatList.get(position);
             Chat prev_chat;
 
             if (position > 0) {
-                current_chat = chatList.get(position);
                 prev_chat = chatList.get(position - 1);
 
                 // Will not show the username again for the same sender
@@ -93,7 +94,6 @@ public class ChatboxFragment extends Fragment{
                     username = "<" + current_chat.getUser() + ">:";
                 }
             } else {
-                current_chat = chatList.get(position);
                 username = "<" + current_chat.getUser() + ">:";
             }
 

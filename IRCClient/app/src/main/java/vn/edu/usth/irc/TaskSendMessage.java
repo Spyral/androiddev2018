@@ -1,5 +1,6 @@
 package vn.edu.usth.irc;
 
+import android.content.Context;
 import android.icu.text.LocaleDisplayNames;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -24,7 +25,12 @@ import static java.lang.Integer.parseInt;
  */
 
 public class TaskSendMessage extends AsyncTask<String, Void, String> {
+    private Context context;
     private HttpURLConnection conn = null;
+
+    public TaskSendMessage(Context context) {
+        this.context = context;
+    }
 
     @Override
     protected void onPreExecute() {
@@ -53,8 +59,10 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
 
             InputStream in = new BufferedInputStream(conn.getInputStream());
             String string = StreamToString.iStreamToString(in);
-            JSONObject getId = new JSONObject(string);
-            Utils.user.setId(parseInt(getId.getJSONArray("sent").getJSONObject(0).getString("MAX(ID)")));
+//            JSONObject getId = new JSONObject(string);
+//            Utils.user.setId(parseInt(getId.getJSONArray("sent").getJSONObject(0).getString("MAX(ID)")));
+
+            new TaskCheckNewMess(context, Utils.user.getChannel()).fetchNewMessID();
 
         } catch (Exception e) {
             e.printStackTrace();
