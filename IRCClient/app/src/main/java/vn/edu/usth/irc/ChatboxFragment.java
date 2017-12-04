@@ -3,6 +3,7 @@ package vn.edu.usth.irc;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -36,6 +37,8 @@ public class ChatboxFragment extends Fragment{
 
         mAdapter = new ChatboxAdapter(chatList);
         mRecyclerView.setAdapter(mAdapter);
+
+        new TaskCheckNewMess(getContext(), Utils.user.getChannel()).fetchNewMessID();
 
         return view;
     }
@@ -77,11 +80,31 @@ public class ChatboxFragment extends Fragment{
 
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
-            Chat chat = chatList.get(position);
+            String username = "";
+            Chat current_chat;
+            Chat prev_chat;
 
-            String usernameParse = "<" + chat.getUser() + ">:";
-            holder.chat_user.setText(usernameParse);
-            holder.chat_content.setText(chat.getContent());
+            if (position > 0) {
+                current_chat = chatList.get(position);
+                prev_chat = chatList.get(position - 1);
+
+                // Will not show the username again for the same sender
+                if (!current_chat.getUser().equals(prev_chat.getUser())) {
+                    username = "<" + current_chat.getUser() + ">:";
+                }
+            } else {
+                current_chat = chatList.get(position);
+                username = "<" + current_chat.getUser() + ">:";
+            }
+
+            holder.chat_user.setText(username);
+            holder.chat_content.setText(current_chat.getContent());
+
+            if (Utils.user.getUsername().equals(current_chat.getUser())) {
+                holder.chat_user.setTextColor(ContextCompat.getColor(getContext(), R.color.colorAccent));
+            } else {
+                holder.chat_user.setTextColor(ContextCompat.getColor(getContext(), R.color.colorBlue));
+            }
         }
 
         @Override

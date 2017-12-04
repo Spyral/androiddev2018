@@ -41,7 +41,7 @@ public class SenderFragment extends Fragment {
     private void sendMessage() {
         Utils.user.setMessage(input.getText().toString());
         new TaskSendMessage().execute();
-        new TaskCheckNewMess(getContext(), "1").fetchNewMessID();
+        new TaskCheckNewMess(getContext(), Utils.user.getChannel()).fetchNewMessID();
         input.setText("");
     }
 

@@ -40,14 +40,11 @@ public class TaskCheckNewMess {
                                 JSONObject idArray = check.getJSONObject(i);
                                 String newId = idArray.getString("MAX(ID)");
                                 Utils.setNewestMessIdServer(Integer.parseInt(newId));
-                                Toast.makeText(context, newId, Toast.LENGTH_LONG).show();
                             }
 
                             // Fetch new message ONLY after new message check has done.
                             if (Utils.getNewestMessIdServer() > Utils.getNewestMessIdLocal()) {
                                 new TaskGetMessage(context, channel).fetchMessage();
-                            } else {
-                                return;
                             }
 
                         } catch (JSONException e) {
