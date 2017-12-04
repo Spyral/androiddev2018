@@ -1,14 +1,22 @@
 package vn.edu.usth.irc;
 
+import android.icu.text.LocaleDisplayNames;
 import android.os.AsyncTask;
+import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import static java.lang.Integer.parseInt;
 
 
 /**
@@ -27,8 +35,7 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... strings) {
 
         try {
-            URL url = new URL(Utils.ipAddress + "ChatApp/chat/send/");
-
+            URL url = new URL("http://"+Utils.ipAddress + "/ChatApp/chat/send/");
             conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -45,13 +52,15 @@ public class TaskSendMessage extends AsyncTask<String, Void, String> {
             localDataOutputStream.close();
 
             InputStream in = new BufferedInputStream(conn.getInputStream());
+            String string = StreamToString.iStreamToString(in);
+            JSONObject getId = new JSONObject(string);
+            Utils.user.setId(parseInt(getId.getJSONArray("sent").getJSONObject(0).getString("MAX(ID)")));
 
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             conn.disconnect();
         }
-
         return "";
     }
 
